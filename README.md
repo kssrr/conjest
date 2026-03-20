@@ -22,4 +22,4 @@ immigration |>
   ) |> 
   autoplot()
 ```
-[](https://github.com/user-attachments/assets/e133896f-f36d-48a4-ad5e-c5a13e402421)
+![](https://github.com/user-attachments/assets/e133896f-f36d-48a4-ad5e-c5a13e402421)
