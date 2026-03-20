@@ -1,5 +1,17 @@
 # Marginal means, conditional marginal means, and autoplot-methods for marginal means.
 
+#' Estimate Marginal Means for a Conjoint Experiment
+#' 
+#' @param data A data frame containing the conjoint data
+#' @param formula A formula of the form `outcome ~ attr1 + attr2 + ...`
+#' @param outcome (Alternative to `formula`) Character string naming the outcome variable
+#' @param attributes (Alternative to `formula`) Character vector of attribute names
+#' @param cluster A one-sided formula specifying the ID/cluster variable, e.g. `~id`
+#'
+#' @return A data frame of class `marginal_means`
+#'
+#' @examples
+#' marginal_means(data, selected ~ group + sex + age, id = ~id)
 #' @export
 marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id) {
   
@@ -33,6 +45,23 @@ marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NU
   
 }
 
+#' Plot Marginal Means from a Conjoint Experiment
+#'
+#' Produces a dot-and-whisker plot of marginal means estimates, with one row
+#' per attribute level. Error bars represent +/- one standard error. Points
+#' are colored by attribute.
+#'
+#' @param df An object of class \code{marginal_means}, as returned by
+#'   \code{\link{marginal_means}}.
+#'
+#' @return A \code{ggplot2} object.
+#'
+#' @seealso \code{\link{marginal_means}}
+#'
+#' @examples
+#' mms <- marginal_means(data, selected ~ group + sex + age, cluster = ~uuid)
+#' autoplot(mms)
+#'
 #' @export
 autoplot.marginal_means <- function(df) {
   
@@ -50,4 +79,3 @@ autoplot.marginal_means <- function(df) {
     ggplot2::labs(x = "Marginal Mean", y = "")
   
 }
-
