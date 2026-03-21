@@ -3,8 +3,8 @@ Title: Basic conjoint estimands.
 Version: 0.1
 Authors@R: 
     person("Lennart", "Kasserra", , "lennart.kasserra@uni-hamburg.de", role = c("aut", "cre"))
-    person("Alina", "Greiner-Filsinger", "alina.greiner@uni-mannheim.de", role = c("aut", "cre"))
-    person("Max", "Schaub", "max.schaub@uni-hamburg.de", role = c("aut", "cre"))
+    person("Alina", "Greiner-Filsinger", "alina.greiner@uni-mannheim.de", role = c("aut", "ctb"))
+    person("Max", "Schaub", "max.schaub@uni-hamburg.de", role = c("aut", "ctb"))
 Description: What the package does (one paragraph).
 License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
     license
