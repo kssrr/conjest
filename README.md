@@ -6,8 +6,8 @@ This package allows you to estimate & visualize:
 
 * Average Marginal Component Effects (AMCEs), via `amce()`.
 * Marginal Means, via `marginal_means()`.
+* Conditional Marginal Means, for subgroup analysis, via `conditional_marginal_means()`.
 * *Planned:* Average Component Interaction Effects (ACIEs).
-* *Planned:* Conditional Marginal Means, for subgroup analysis.
 
 ## Installation
 
