@@ -5,9 +5,14 @@ Authors@R:
     person("Lennart", "Kasserra", , "lennart.kasserra@uni-hamburg.de", role = c("aut", "cre"))
     person("Alina", "Greiner-Filsinger", "alina.greiner@uni-mannheim.de", role = c("aut", "ctb"))
     person("Max", "Schaub", "max.schaub@uni-hamburg.de", role = c("aut", "ctb"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+Description: Provides tools for estimating and visualizing common estimands
+    from conjoint survey experiments, including average marginal component
+    effects (AMCEs) and marginal means (MMs), with support for
+    cluster-robust standard errors and subgroup analyses. Implements the
+    methods described in Hainmueller, Hopkins, and Yamamoto (2014)
+    <doi:10.1093/pan/mpt024> and Leeper, Hobolt, and Tilley (2020)
+    <doi:10.1017/pan.2019.30>.
+License: use_mit_license()
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
