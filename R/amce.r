@@ -103,23 +103,7 @@ amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = N
   
 }
 
-#' Plot Average Marginal Component Effects (AMCEs) from a Conjoint Experiment
-#'
-#' Produces a dot-and-whisker plot of AMCE estimates, with one row per
-#' attribute level. Error bars represent +/- one standard error. Reference
-#' levels are plotted at zero with no error bar. Points are colored by
-#' attribute.
-#'
-#' @param df An object of class \code{amce}, as returned by \code{\link{amce}}.
-#'
-#' @return A \code{ggplot2} object.
-#'
-#' @seealso \code{\link{amce}}, \code{\link{autoplot.marginal_means}}
-#'
-#' @examples
-#' amces <- amce(data, selected ~ group + sex + age, id = ~uuid)
-#' autoplot(amces)
-#'
+#' @importFrom ggplot2 autoplot
 #' @export
 autoplot.amce <- function(df) {
   

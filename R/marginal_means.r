@@ -123,23 +123,7 @@ conditional_marginal_means <- function(data, formula = NULL, outcome = NULL, att
   
 }
 
-#' Plot Marginal Means from a Conjoint Experiment
-#'
-#' Produces a dot-and-whisker plot of marginal means estimates, with one row
-#' per attribute level. Error bars represent the 95% CI. Points
-#' are colored by attribute.
-#'
-#' @param df An object of class \code{marginal_means}, as returned by
-#'   \code{\link{marginal_means}}.
-#'
-#' @return A \code{ggplot2} object.
-#'
-#' @seealso \code{\link{marginal_means}}
-#'
-#' @examples
-#' mms <- marginal_means(data, selected ~ group + sex + age, cluster = ~uuid)
-#' autoplot(mms)
-#'
+#' @importFrom ggplot2 autoplot
 #' @export
 autoplot.marginal_means <- function(df) {
   
@@ -158,6 +142,7 @@ autoplot.marginal_means <- function(df) {
   
 }
 
+#' @importFrom ggplot2 autoplot
 #' @export
 autoplot.conditional_marginal_means <- function(data, ...) {
   
