@@ -145,3 +145,67 @@ autoplot.amce <- function(df) {
     ggplot2::labs(x = "AMCE", y = "")
   
 }
+
+#' Summarize Average Marginal Component Effects
+#'
+#' Prints a formatted summary of an \code{amce} object, grouped by attribute,
+#' with coefficient estimates, standard errors, t-statistics, p-values, and
+#' significance stars. The reference level for each attribute is printed as a
+#' header and omitted from the coefficient table.
+#'
+#' @param x An object of class \code{amce}, as returned by \code{\link{amce}}.
+#' @param ... Additional arguments (currently ignored).
+#'
+#' @return Invisibly returns \code{x}. Called for its side effect of printing
+#'   a formatted summary to the console.
+#'
+#' @seealso \code{\link{amce}}, \code{\link{autoplot.amce}}
+#'
+#' @examples
+#' amces <- amce(data, selected ~ group + sex + age, id = ~uuid)
+#' summary(amces)
+#'
+#' @export
+summary.amce <- function(results, ...) {
+  
+  attrs <- unique(results$attribute)
+  
+  cat("Average Marginal Component Effects\n")
+  cat(strrep("=", 60), "\n\n")
+  
+  purrr::walk(attrs, function(attr) {
+    
+    cat(
+      "Attribute:", attr, "\n",
+      "Reference level:", results$level[as.character(results$attribute) == attr][1], "\n",
+      strrep("-", 60), "\n"
+    )
+    
+    subset <- results[as.character(results$attribute) == attr & !is.na(results$p.value), ]
+    
+    stars <- dplyr::case_when(
+      subset$p.value < 0.001 ~ " ***",
+      subset$p.value < 0.01  ~ " ** ",
+      subset$p.value < 0.05  ~ " *  ",
+      subset$p.value < 0.1   ~ " .  ",
+      TRUE                   ~ "    "
+    )
+    
+    out <- data.frame(
+      ` `          = subset$level,
+      `Estimate`   = formatC(subset$estimate,  format = "f", digits = 4),
+      `Std. Error` = formatC(subset$std.error, format = "f", digits = 4),
+      `t value`    = formatC(subset$statistic, format = "f", digits = 3),
+      `Pr(>|t|)`   = formatC(subset$p.value,   format = "e", digits = 2),
+      ` `          = stars,
+      check.names  = FALSE
+    )
+    
+    print(out, row.names = FALSE)
+    cat("\n")
+    
+  })
+  
+  cat("\nSignif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n")
+  
+}
