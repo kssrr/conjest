@@ -32,8 +32,8 @@ immigration |>
 #> ============================================================ 
 #> 
 #> Attribute: Education 
-#>  Reference level: No Formal 
-#>  ------------------------------------------------------------ 
+#> Reference level: No Formal 
+#> ------------------------------------------------------------ 
 #>                   Estimate Std. Error t value Pr(>|t|)     
 #>         4th Grade   0.0327     0.0155   2.109 3.50e-02  *  
 #>         8th Grade   0.0549     0.0156   3.529 4.19e-04  ***
@@ -43,14 +43,14 @@ immigration |>
 #>   Graduate Degree   0.1918     0.0159  12.037 3.32e-33  ***
 #> 
 #> Attribute: Gender 
-#>  Reference level: Female 
-#>  ------------------------------------------------------------ 
+#> Reference level: Female 
+#> ------------------------------------------------------------ 
 #>       Estimate Std. Error t value Pr(>|t|)     
 #>  Male  -0.0241     0.0085  -2.823 4.76e-03  ** 
 #> 
 #> Attribute: CountryOfOrigin 
-#>  Reference level: India 
-#>  ------------------------------------------------------------ 
+#> Reference level: India 
+#> ------------------------------------------------------------ 
 #>              Estimate Std. Error t value Pr(>|t|)     
 #>      Germany   0.0407     0.0182   2.234 2.55e-02  *  
 #>       France   0.0149     0.0186   0.798 4.25e-01     

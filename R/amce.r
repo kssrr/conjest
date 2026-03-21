@@ -175,11 +175,9 @@ summary.amce <- function(results, ...) {
   
   purrr::walk(attrs, function(attr) {
     
-    cat(
-      "Attribute:", attr, "\n",
-      "Reference level:", results$level[as.character(results$attribute) == attr][1], "\n",
-      strrep("-", 60), "\n"
-    )
+    cat("Attribute:", attr, "\n")
+    cat("Reference level:", results$level[as.character(results$attribute) == attr][1], "\n")
+    cat(strrep("-", 60), "\n")
     
     subset <- results[as.character(results$attribute) == attr & !is.na(results$p.value), ]
     
