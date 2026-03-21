@@ -141,7 +141,11 @@ autoplot.amce <- function(df) {
     ) +
     ggplot2::geom_linerange(ggplot2::aes(xmin = lower, xmax = upper)) +
     ggplot2::theme(legend.position = "none") +
-    ggplot2::labs(x = "AMCE", y = "") +
+    ggplot2::labs(
+      x = "AMCE", 
+      y = "",
+      caption = "*** = p < 0.01, ** = p < 0.05, * = p < 0.1"
+    ) +
     ggplot2::facet_wrap(~attribute, ncol = 1, scales = "free_y", space = "free_y")
   
 }

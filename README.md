@@ -82,4 +82,4 @@ immigration |>
   amce(ChosenImmigrant ~ Education + Gender + CountryOfOrigin, id = ~CaseID) |> 
   autoplot()
 ```
-![](https://github.com/user-attachments/assets/ac462e6f-e0c6-4504-9c5e-9d648f668358)
+![](https://github.com/user-attachments/assets/b68d8756-8411-4532-b3f7-847450d026d2)
