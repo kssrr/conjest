@@ -27,6 +27,8 @@ If provided, \code{outcome} and \code{attributes} are ignored.}
 
 \item{id}{A one-sided formula specifying the clustering variable for
 cluster-robust standard errors, e.g. \code{~id}.}
+
+\item{vcov_type}{Type of variance-covariance estimation when clustering (HC0-HC3). Default is "HC1".}
 }
 \value{
 A data frame of class \code{amce}.

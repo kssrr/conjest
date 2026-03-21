@@ -14,6 +14,7 @@
 #'   \code{formula} is provided.
 #' @param id A one-sided formula specifying the clustering variable for
 #'   cluster-robust standard errors, e.g. \code{~id}.
+#' @param vcov_type Type of variance-covariance estimation when clustering (HC0-HC3). Default is "HC1".
 #'
 #' @return A data frame of class \code{amce}.
 #'
