@@ -125,7 +125,6 @@ autoplot.amce <- function(df) {
   
   df |> 
     dplyr::mutate(
-      label = paste0(attribute, ": ", level),
       sig = dplyr::case_when(
         p.value < .01 ~ "***",
         p.value < .05 ~ "**",
@@ -133,7 +132,7 @@ autoplot.amce <- function(df) {
         TRUE ~ ""
       )
     ) |> 
-    ggplot2::ggplot(ggplot2::aes(x = estimate, y = label, color = attribute)) +
+    ggplot2::ggplot(ggplot2::aes(x = estimate, y = level, color = attribute)) +
     ggplot2::geom_vline(xintercept = 0, lty = "dotted") +
     ggplot2::geom_point() +
     ggplot2::geom_text(
@@ -142,7 +141,8 @@ autoplot.amce <- function(df) {
     ) +
     ggplot2::geom_linerange(ggplot2::aes(xmin = lower, xmax = upper)) +
     ggplot2::theme(legend.position = "none") +
-    ggplot2::labs(x = "AMCE", y = "")
+    ggplot2::labs(x = "AMCE", y = "") +
+    ggplot2::facet_wrap(~attribute, ncol = 1, scales = "free_y", space = "free_y")
   
 }
 

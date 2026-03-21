@@ -66,7 +66,7 @@ immigration |>
 #> Signif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
 
-Results also work with `ggplot2::autoplot()`:
+Results also work with `ggplot2::autoplot()`, both for `marginal_means()`, as well as for `amce()`:
 
 ```r
 library(ggplot2)
@@ -76,3 +76,10 @@ immigration |>
   autoplot()
 ```
 ![](https://github.com/user-attachments/assets/e133896f-f36d-48a4-ad5e-c5a13e402421)
+
+```r
+immigration |> 
+  amce(ChosenImmigrant ~ Education + Gender + CountryOfOrigin, id = ~CaseID) |> 
+  autoplot()
+```
+![](https://github.com/user-attachments/assets/ac462e6f-e0c6-4504-9c5e-9d648f668358)
