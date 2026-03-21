@@ -4,7 +4,14 @@
 \alias{marginal_means}
 \title{Estimate Marginal Means for a Conjoint Experiment}
 \usage{
-marginal_means(data, formula = NULL, outcome = NULL, attributes = NULL, id)
+marginal_means(
+  data,
+  formula = NULL,
+  outcome = NULL,
+  attributes = NULL,
+  id = NULL,
+  vcov_type = "HC1"
+)
 }
 \arguments{
 \item{data}{A data frame containing the conjoint data}

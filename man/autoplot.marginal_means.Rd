@@ -15,7 +15,7 @@ A \code{ggplot2} object.
 }
 \description{
 Produces a dot-and-whisker plot of marginal means estimates, with one row
-per attribute level. Error bars represent +/- one standard error. Points
+per attribute level. Error bars represent the 95\% CI. Points
 are colored by attribute.
 }
 \examples{
