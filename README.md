@@ -9,6 +9,16 @@ This package allows you to estimate & visualize:
 * *Planned:* Average Component Interaction Effects (ACIEs).
 * *Planned:* Conditional Marginal Means, for subgroup analysis.
 
+## Installation
+
+The package is not (yet) on CRAN, but you can install it directly from GitHub:
+
+```r
+devtools::install_github("kssrr/conjest")
+```
+
+## Usage
+
 Getting a look at your results is as easy as this:
 
 ```r
