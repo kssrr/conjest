@@ -100,3 +100,9 @@ autoplot.marginal_means <- function(df) {
     ggplot2::labs(x = "Marginal Mean", y = "")
   
 }
+
+#' @export
+print.marginal_means <- function(x, ...) {
+  cat(cli::col_grey("# Marginal Means\n\n"))
+  NextMethod()
+}

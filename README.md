@@ -88,6 +88,8 @@ Everything returns tidy data frames that are easy to work with if you want to ma
 ```r
 amce_res
 
+#> # Average Marginal Component Effects
+#>
 #> # A tibble: 19 × 9
 #>    term       estimate std.error    lower    upper statistic   p.value
 #>    <chr>         <dbl>     <dbl>    <dbl>    <dbl>     <dbl>     <dbl>
