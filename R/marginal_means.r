@@ -6,7 +6,8 @@
 #' @param formula A formula of the form `outcome ~ attr1 + attr2 + ...`
 #' @param outcome (Alternative to `formula`) Character string naming the outcome variable
 #' @param attributes (Alternative to `formula`) Character vector of attribute names
-#' @param cluster A one-sided formula specifying the ID/cluster variable, e.g. `~id`
+#' @param id A one-sided formula specifying the ID/cluster variable, e.g. `~id`
+#' @param vcov_type Type of variance-covariance estimation when clustering (HC0-HC3). Default is "HC1".
 #'
 #' @return A data frame of class `marginal_means`
 #'

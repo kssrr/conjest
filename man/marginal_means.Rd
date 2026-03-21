@@ -22,7 +22,9 @@ marginal_means(
 
 \item{attributes}{(Alternative to \code{formula}) Character vector of attribute names}
 
-\item{cluster}{A one-sided formula specifying the ID/cluster variable, e.g. \code{~id}}
+\item{id}{A one-sided formula specifying the ID/cluster variable, e.g. \code{~id}}
+
+\item{vcov_type}{Type of variance-covariance estimation when clustering (HC0-HC3). Default is "HC1".}
 }
 \value{
 A data frame of class \code{marginal_means}
