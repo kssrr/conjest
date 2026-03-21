@@ -4,7 +4,14 @@
 \alias{amce}
 \title{Estimate Average Marginal Component Effects (AMCEs) for a Conjoint Experiment}
 \usage{
-amce(data, formula = NULL, outcome = NULL, attributes = NULL, id)
+amce(
+  data,
+  formula = NULL,
+  outcome = NULL,
+  attributes = NULL,
+  id = NULL,
+  vcov_type = "HC1"
+)
 }
 \arguments{
 \item{data}{A data frame containing the conjoint data.}
