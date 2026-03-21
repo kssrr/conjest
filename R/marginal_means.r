@@ -184,6 +184,10 @@ print.marginal_means <- function(x, ...) {
 
 #' @export
 print.conditional_marginal_means <- function(x, ...) {
-  cat(cli::col_grey("# Conditional Marginal Means\n\n"))
+  
+  group <- attr(x, "group")
+  
+  cat(cli::col_grey("# Conditional Marginal Means\n"))
+  cat(cli::col_grey(paste0("# Subgroups by: [", group, "]\n\n")))
   NextMethod()
 }
