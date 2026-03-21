@@ -13,31 +13,51 @@
 #' @examples
 #' marginal_means(data, selected ~ group + sex + age, id = ~id)
 #' @export
-marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id) {
+marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, vcov_type = "HC1") {
   
   if (!is.null(formula)) {
     outcome    <- deparse(rlang::f_lhs(formula))
     attributes <- labels(terms(formula))
   }
   
+  validate_inputs(data, attributes, id)
+  
+  # fit models:
+  
   mods <- attributes |> lapply(function(x) {
     lm(reformulate(x, response = outcome, intercept = FALSE), data = data)
   })
   
+  # cluster SEs & tidy up results:
+  
   results <- 
-    Map(function(model, attr) {
+    purrr::map2(mods, attributes, function(model, attr) {
       
-      tidy_mod <- model |>
-        lmtest::coeftest(vcov. = sandwich::vcovCL(model, cluster = id)) |>
-        broom::tidy()
+      if (!is.null(id)) {
+        
+        processed <- lmtest::coeftest(
+          model,
+          vcov. = sandwich::vcovCL(
+            model,
+            cluster = id,
+            type = vcov_type
+          )
+        )
+        
+      } else {
+        
+        processed <- lmtest::coeftest(model)
+        
+      }
       
-      tidy_mod$attribute <- attr
-      tidy_mod$level     <- model$xlevels[[attr]]
-      tidy_mod
+      processed |> 
+        broom::tidy() |> 
+        dplyr::bind_cols(attribute = attr, level = model$xlevels[[attr]])
       
-    }, mods, attributes) |>
-    do.call(rbind, args = _) |>
-    _[, c("attribute", "level", "term", "estimate", "std.error")]
+    }) |>
+    dplyr::bind_rows() |> 
+    dplyr::mutate(lower = estimate - std.error, upper = estimate + std.error) |> 
+    dplyr::select(attribute, level, term, estimate, std.error, lower, upper)
   
   class(results) <- c("marginal_means", class(results))
   
@@ -48,7 +68,7 @@ marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NU
 #' Plot Marginal Means from a Conjoint Experiment
 #'
 #' Produces a dot-and-whisker plot of marginal means estimates, with one row
-#' per attribute level. Error bars represent +/- one standard error. Points
+#' per attribute level. Error bars represent the 95% CI. Points
 #' are colored by attribute.
 #'
 #' @param df An object of class \code{marginal_means}, as returned by
