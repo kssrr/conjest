@@ -4,8 +4,7 @@ Version: 0.1
 Authors@R: c(
     person("Lennart", "Kasserra", , "lennart.kasserra@uni-hamburg.de", role = c("aut", "cre")),
     person("Alina", "Greiner-Filsinger", , "alina.greiner@uni-mannheim.de", role = c("aut", "ctb")),
-    person("Max", "Schaub", , "max.schaub@uni-hamburg.de", role = c("aut", "ctb"))
-)
+    person("Max", "Schaub", , "max.schaub@uni-hamburg.de", role = c("aut", "ctb")))
 Description: Provides tools for estimating and visualizing common estimands
     from conjoint survey experiments, including average marginal component
     effects (AMCEs) and marginal means (MMs), with support for
