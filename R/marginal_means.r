@@ -162,6 +162,77 @@ autoplot.conditional_marginal_means <- function(data, ...) {
 }
 
 #' @export
+summary.marginal_means <- function(data, ...) {
+  
+  attrs <- unique(data$attribute)
+  
+  cat("Marginal Means\n")
+  cat(strrep("=", 60), "\n\n")
+  
+  purrr::walk(attrs, function(attr) {
+    
+    cat("Attribute:", attr, "\n")
+    cat(strrep("-", 60), "\n")
+    
+    subset <- data[data$attribute == attr, ]
+    
+    out <- data.frame(
+      ` `          = subset$level,
+      `Estimate`   = formatC(subset$estimate,  format = "f", digits = 4),
+      `Std. Error` = formatC(subset$std.error, format = "f", digits = 4),
+      ` `          = ifelse(subset$estimate < .5, "-", "+"),
+      check.names  = FALSE
+    )
+    
+    print(out, row.names = FALSE)
+    cat("\n")
+    
+  })
+}
+
+#' @export
+summary.conditional_marginal_means <- function(data, ...) {
+  
+  group_var <- attr(data, "group")
+  attrs     <- unique(data$attribute)
+  
+  cat("Conditional Marginal Means\n")
+  cat(strrep("=", 60), "\n\n")
+  
+  purrr::walk(attrs, function(attr) {
+    
+    cat("Attribute:", attr, "\n")
+    cat(strrep("-", 60), "\n")
+    
+    attr_data <- data[as.character(data$attribute) == attr, ]
+    levels    <- unique(attr_data$level)
+    
+    purrr::walk(levels, function(lvl) {
+      
+      cat("Level:", lvl, "\n\n")
+      
+      subset <- attr_data[attr_data$level == lvl, ]
+      
+      out <- data.frame(
+        ` `            = as.character(subset[[group_var]]),
+        `Estimate`     = formatC(subset$estimate,  format = "f", digits = 4),
+        `Std. Error`   = formatC(subset$std.error, format = "f", digits = 4),
+        ` `            = ifelse(subset$estimate >= 0.5, "+", "-"),
+        check.names    = FALSE
+      )
+      
+      print(out, row.names = FALSE)
+      cat("\n")
+      
+    })
+    
+    cat(strrep("-", 60), "\n\n")
+    
+  })
+  
+}
+
+#' @export
 print.marginal_means <- function(x, ...) {
   cat(cli::col_grey("# Marginal Means\n\n"))
   NextMethod()
