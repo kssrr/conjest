@@ -27,79 +27,59 @@
 #' amce(data, outcome = "selected", attributes = c("group", "sex", "age"), id = ~uuid)
 #'
 #' @export
-amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, vcov_type = "HC1") {
+amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, vcov_type = "HC1", wts = NULL, design = NULL) {
   
   if (!is.null(formula)) {
     outcome    <- deparse(rlang::f_lhs(formula))
     attributes <- labels(terms(formula))
   }
   
-  validate_inputs(data, attributes, id)
+  # `wts` might be an unquoted name; evaluate it here:
+  parsed_wts <- parse_wts(data, wts, substitute(wts))
   
   # fit models separately (could be one model but this
   # makes processing a bit more streamlined):
-  
-  mods <- attributes |> lapply(function(x) {
-    lm(reformulate(x, response = outcome), data = data)
-  })
-  
-  results <- 
-    purrr::map2(mods, attributes, function(model, attr) {
-    
-      # cluster SEs if `id` was provided:
+   
+  results <- purrr::map(attributes, function(attr) {
       
-      if (!is.null(id)) {
-        
-        processed <- lmtest::coeftest(
-          model,
-          vcov. = sandwich::vcovCL(
-            model,
-            cluster = id,
-            type = vcov_type
-          )
-        )
-        
-      } else {
-        
-        processed <- lmtest::coeftest(model)
-        
-      }
+      tidy_mod <- cjlm(
+        data,
+        formula   = reformulate(attr, response = outcome),
+        id        = id,
+        vcov_type = vcov_type,
+        wts       = parsed_wts,
+        design    = design
+      )
       
       # the first factor level is the baseline & does not appear
       # in the model results; adding baselines back in (we esp.
       # want these to show up in the plots):
       
-      all_levels     <- model$xlevels[[attr]]
-      baseline_level <- all_levels[1]
+      all_levels <- levels(data[[attr]])
       
       baseline_row <- data.frame(
-        term      = paste0(attr, baseline_level),
+        term      = paste0(attr, all_levels[1]),
         estimate  = 0,
         std.error = 0,
-        statistic = 0,
-        p.value = NA_real_
+        statistic = NA_real_,
+        p.value   = NA_real_
       )
       
-      # put everything together & tidy up:
+      # put everything back together
       
-      processed |> 
-        broom::tidy() |> 
-        dplyr::filter(term != "(Intercept)") |> 
-        dplyr::add_row(baseline_row, .before = 1) |> 
-        #^ have to *pre*pend this one for row order to match:
+      tidy_mod |>
+        dplyr::filter(term != "(Intercept)") |>
+        dplyr::add_row(baseline_row, .before = 1) |>
         dplyr::mutate(attribute = attr, level = all_levels)
+      
+    }) |>
+      dplyr::bind_rows() |>
+      dplyr::mutate(lower = estimate - std.error, upper = estimate + std.error) |>
+      dplyr::select(attribute, level, term, estimate, std.error, lower, upper, statistic, p.value)
     
-    }) |> 
-    dplyr::bind_rows() |> 
-    dplyr::mutate(lower = estimate - std.error, upper = estimate + std.error) |> 
-    dplyr::select(
-      term, estimate, std.error, lower, upper,
-      statistic, p.value, attribute, level
-    )
-  
-  class(results) <- c("amce", class(results))
-  
-  results
+    class(results) <- c("amce", class(results))
+    
+    results
   
 }
 
@@ -152,7 +132,10 @@ amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = N
 #' )
 #'
 #' @export
-conditional_amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, group = NULL, vcov_type = "HC1") {
+conditional_amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, group = NULL, vcov_type = "HC1", wts = NULL, design = NULL) {
+  
+  # might be an unquoted name, evaluate here:
+  parsed_wts <- parse_wts(data, wts, substitute(wts))
   
   result <- 
     data |> 
@@ -161,13 +144,29 @@ conditional_amce <- function(data, formula = NULL, outcome = NULL, attributes = 
     dplyr::mutate(
       mms = lapply(data, function(d) {
         
+        # If a survey design was provided, subset it to match
+        # the current group's rows rather than passing the full design.
+        # Results might differ more strongly here depending on whether we call
+        # into the `survey`-package or use `lm` because `survey` does more
+        # adjustments & I think the design retains information about the whole
+        # clustering structure, while with `lm` we adjust in the subset only.
+        # Should look into this and think about it more at some point.
+        
+        sub_design <- if (!is.null(design)) {
+          subset(design, rownames(design$variables) %in% rownames(d))
+        } else {
+          NULL
+        } 
+        
         amce(
           d,
-          formula = formula,
-          outcome = outcome,
+          formula    = formula,
+          outcome    = outcome,
           attributes = attributes,
-          id = id,
-          vcov_type = vcov_type
+          id         = id,
+          vcov_type  = vcov_type,
+          wts        = parsed_wts,
+          design     = sub_design
         )
         
       })
