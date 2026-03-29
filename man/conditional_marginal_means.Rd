@@ -11,7 +11,9 @@ conditional_marginal_means(
   attributes = NULL,
   id = NULL,
   group = NULL,
-  vcov_type = "HC1"
+  vcov_type = "HC1",
+  wts = NULL,
+  design = NULL
 )
 }
 \arguments{
@@ -23,12 +25,22 @@ conditional_marginal_means(
 
 \item{attributes}{(Alternative to \code{formula}) Character vector of attribute names}
 
-\item{id}{A one-sided formula specifying the ID/cluster variable, e.g. \code{~id}}
+\item{id}{(Optional) A one-sided formula specifying the ID/cluster variable, e.g. \code{~id}}
 
 \item{group}{The respondent-level grouping variable (unquoted). Marginal
 means are estimated separately for each level of this variable.}
 
 \item{vcov_type}{Type of variance-covariance estimation when clustering (HC0-HC3). Default is "HC1".}
+
+\item{wts}{(Optional) Weights to be used in the regression. Can be
+\code{NULL} (the default), a numeric vector, or the name of a
+column in \code{data} (quoted or unquoted).}
+
+\item{design}{A \code{survey::svydesign}-object. If a \code{design} is
+provided, \code{cjlm} uses \code{survey::svyglm} as backend using
+the provided design, disregarding other arguments like \code{id},
+\code{vcov_type}, and \code{wts}, as all of these are handled
+by \code{survey::svyglm} (see \code{?survey::svyglm}).}
 }
 \value{
 A data frame of class \code{marginal_means}
@@ -39,6 +51,12 @@ level of a respondent-level grouping variable, allowing comparisons of conjoint 
 subgroups. This approach is preferred over conditional AMCEs for subgroup analysis, as conditional
 marginal means do not require a baseline, and are thus not sensitive to the choice of a baseline
 category. This was recommended by Leeper, Hobolt & Tilley (2020).
+}
+\details{
+By default, the function uses \code{stats::lm} to estimate the model, and
+\code{sandwich} to adjust standard errors if needed. However, you can also pass
+a surveydesign (\code{survey::svydesign}), in which case \code{survey::svyglm}
+will be used.
 }
 \examples{
 marginal_means(data, selected ~ group + sex + age, id = ~id)

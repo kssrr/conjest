@@ -4,6 +4,11 @@
 #' cluster-robust standard errors. The reference level for each attribute is
 #' included is the first level of each variable. Note that attributes have to
 #' be factors.
+#' 
+#' By default, the function uses \code{stats::lm} to estimate the model, and 
+#' \code{sandwich} to adjust standard errors if needed. However, you can also pass
+#' a surveydesign (\code{survey::svydesign}), in which case \code{survey::svyglm}
+#' will be used.
 #'
 #' @param data A data frame containing the conjoint data.
 #' @param formula A formula of the form \code{outcome ~ attr1 + attr2 + ...}.
@@ -12,9 +17,17 @@
 #'   \code{formula} is provided.
 #' @param attributes Character vector of attribute names. Ignored if
 #'   \code{formula} is provided.
-#' @param id A one-sided formula specifying the clustering variable for
+#' @param id (Optional) A one-sided formula specifying the clustering variable for
 #'   cluster-robust standard errors, e.g. \code{~id}.
 #' @param vcov_type Type of variance-covariance estimation when clustering (HC0-HC3). Default is "HC1".
+#' @param wts (Optional) Weights to be used in the regression. Can be
+#'   \code{NULL} (the default), a numeric vector, or the name of a 
+#'   column in \code{data} (quoted or unquoted).
+#' @param design A \code{survey::svydesign}-object. If a \code{design} is 
+#'   provided, \code{cjlm} uses \code{survey::svyglm} as backend using 
+#'   the provided design, disregarding other arguments like \code{id},
+#'   \code{vcov_type}, and \code{wts}, as all of these are handled
+#'   by \code{survey::svyglm} (see \code{?survey::svyglm}).
 #'
 #' @return A data frame of class \code{amce}.
 #'
@@ -92,6 +105,11 @@ amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = N
 #' between groups (Leeper, Hobolt & Tilley, 2020). For comparing
 #' absolute levels of favorability across subgroups, use
 #' \code{\link{conditional_marginal_means}} instead.
+#' 
+#' By default, the function uses \code{stats::lm} to estimate the model, and 
+#' \code{sandwich} to adjust standard errors if needed. However, you can also pass
+#' a surveydesign (\code{survey::svydesign}), in which case \code{survey::svyglm}
+#' will be used.
 #'
 #' @param data A data frame containing the conjoint data.
 #' @param formula A formula of the form \code{outcome ~ attr1 + attr2 + ...}.
@@ -100,7 +118,7 @@ amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = N
 #'   \code{formula} is provided.
 #' @param attributes Character vector of attribute names. Ignored if
 #'   \code{formula} is provided.
-#' @param id A one-sided formula specifying the clustering variable for
+#' @param id (Optional) A one-sided formula specifying the clustering variable for
 #'   cluster-robust standard errors, e.g. \code{~uuid}. If \code{NULL},
 #'   standard OLS standard errors are used and a warning is issued.
 #' @param group The respondent-level grouping variable (unquoted). AMCEs are
@@ -108,6 +126,14 @@ amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = N
 #' @param vcov_type The type of heteroskedasticity-consistent covariance
 #'   estimator passed to \code{\link[sandwich]{vcovCL}}. Defaults to
 #'   \code{"HC1"}.
+#' @param wts (Optional) Weights to be used in the regression. Can be
+#'   \code{NULL} (the default), a numeric vector, or the name of a 
+#'   column in \code{data} (quoted or unquoted).
+#' @param design A \code{survey::svydesign}-object. If a \code{design} is 
+#'   provided, \code{cjlm} uses \code{survey::svyglm} as backend using 
+#'   the provided design, disregarding other arguments like \code{id},
+#'   \code{vcov_type}, and \code{wts}, as all of these are handled
+#'   by \code{survey::svyglm} (see \code{?survey::svyglm}).
 #'
 #' @return A data frame of class \code{conditional_amce} with the same columns
 #'   as \code{\link{amce}}, plus a column for the grouping variable. The name

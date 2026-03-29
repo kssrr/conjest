@@ -10,7 +10,9 @@ amce(
   outcome = NULL,
   attributes = NULL,
   id = NULL,
-  vcov_type = "HC1"
+  vcov_type = "HC1",
+  wts = NULL,
+  design = NULL
 )
 }
 \arguments{
@@ -25,10 +27,20 @@ If provided, \code{outcome} and \code{attributes} are ignored.}
 \item{attributes}{Character vector of attribute names. Ignored if
 \code{formula} is provided.}
 
-\item{id}{A one-sided formula specifying the clustering variable for
+\item{id}{(Optional) A one-sided formula specifying the clustering variable for
 cluster-robust standard errors, e.g. \code{~id}.}
 
 \item{vcov_type}{Type of variance-covariance estimation when clustering (HC0-HC3). Default is "HC1".}
+
+\item{wts}{(Optional) Weights to be used in the regression. Can be
+\code{NULL} (the default), a numeric vector, or the name of a
+column in \code{data} (quoted or unquoted).}
+
+\item{design}{A \code{survey::svydesign}-object. If a \code{design} is
+provided, \code{cjlm} uses \code{survey::svyglm} as backend using
+the provided design, disregarding other arguments like \code{id},
+\code{vcov_type}, and \code{wts}, as all of these are handled
+by \code{survey::svyglm} (see \code{?survey::svyglm}).}
 }
 \value{
 A data frame of class \code{amce}.
@@ -38,6 +50,12 @@ Fits a linear probability model and computes AMCEs with
 cluster-robust standard errors. The reference level for each attribute is
 included is the first level of each variable. Note that attributes have to
 be factors.
+}
+\details{
+By default, the function uses \code{stats::lm} to estimate the model, and
+\code{sandwich} to adjust standard errors if needed. However, you can also pass
+a surveydesign (\code{survey::svydesign}), in which case \code{survey::svyglm}
+will be used.
 }
 \examples{
 amce(data, selected ~ group + sex + age, id = ~uuid)

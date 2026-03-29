@@ -10,7 +10,9 @@ marginal_means(
   outcome = NULL,
   attributes = NULL,
   id = NULL,
-  vcov_type = "HC1"
+  vcov_type = "HC1",
+  wts = NULL,
+  design = NULL
 )
 }
 \arguments{
@@ -25,12 +27,36 @@ marginal_means(
 \item{id}{A one-sided formula specifying the ID/cluster variable, e.g. \code{~id}}
 
 \item{vcov_type}{Type of variance-covariance estimation when clustering (HC0-HC3). Default is "HC1".}
+
+\item{wts}{(Optional) Weights to be used in the regression. Can be
+\code{NULL} (the default), a numeric vector, or the name of a
+column in \code{data} (quoted or unquoted).}
+
+\item{design}{A \code{survey::svydesign}-object. If a \code{design} is
+provided, \code{cjlm} uses \code{survey::svyglm} as backend using
+the provided design, disregarding other arguments like \code{id},
+\code{vcov_type}, and \code{wts}, as all of these are handled
+by \code{survey::svyglm} (see \code{?survey::svyglm}).}
 }
 \value{
 A data frame of class \code{marginal_means}
 }
 \description{
-Estimate Marginal Means for a Conjoint Experiment
+Computes marginal means (MMs) for each level of each attribute in a conjoint
+experiment. A marginal mean represents the average outcome, typically the
+probability of a profile being chosen, when a given attribute level is
+present, averaging over all other attributes and their levels. Unlike AMCEs,
+marginal means are not defined relative to a reference category, making them
+better suited for describing absolute levels of support and comparing
+preferences across subgroups. Values above 0.5 indicate that a level
+increases the probability of selection relative to the average profile, and
+values below 0.5 indicate the opposite.
+}
+\details{
+By default, the function uses \code{stats::lm} to estimate the model, and
+\code{sandwich} to adjust standard errors if needed. However, you can also pass
+a surveydesign (\code{survey::svydesign}), in which case \code{survey::svyglm}
+will be used.
 }
 \examples{
 marginal_means(data, selected ~ group + sex + age, id = ~id)

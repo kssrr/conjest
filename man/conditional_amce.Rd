@@ -11,7 +11,9 @@ conditional_amce(
   attributes = NULL,
   id = NULL,
   group = NULL,
-  vcov_type = "HC1"
+  vcov_type = "HC1",
+  wts = NULL,
+  design = NULL
 )
 }
 \arguments{
@@ -26,7 +28,7 @@ If provided, \code{outcome} and \code{attributes} are ignored.}
 \item{attributes}{Character vector of attribute names. Ignored if
 \code{formula} is provided.}
 
-\item{id}{A one-sided formula specifying the clustering variable for
+\item{id}{(Optional) A one-sided formula specifying the clustering variable for
 cluster-robust standard errors, e.g. \code{~uuid}. If \code{NULL},
 standard OLS standard errors are used and a warning is issued.}
 
@@ -36,6 +38,16 @@ estimated separately for each level of this variable.}
 \item{vcov_type}{The type of heteroskedasticity-consistent covariance
 estimator passed to \code{\link[sandwich]{vcovCL}}. Defaults to
 \code{"HC1"}.}
+
+\item{wts}{(Optional) Weights to be used in the regression. Can be
+\code{NULL} (the default), a numeric vector, or the name of a
+column in \code{data} (quoted or unquoted).}
+
+\item{design}{A \code{survey::svydesign}-object. If a \code{design} is
+provided, \code{cjlm} uses \code{survey::svyglm} as backend using
+the provided design, disregarding other arguments like \code{id},
+\code{vcov_type}, and \code{wts}, as all of these are handled
+by \code{survey::svyglm} (see \code{?survey::svyglm}).}
 }
 \value{
 A data frame of class \code{conditional_amce} with the same columns
@@ -52,6 +64,12 @@ thus do not provide direct insight about patterns of preferences
 between groups (Leeper, Hobolt & Tilley, 2020). For comparing
 absolute levels of favorability across subgroups, use
 \code{\link{conditional_marginal_means}} instead.
+}
+\details{
+By default, the function uses \code{stats::lm} to estimate the model, and
+\code{sandwich} to adjust standard errors if needed. However, you can also pass
+a surveydesign (\code{survey::svydesign}), in which case \code{survey::svyglm}
+will be used.
 }
 \examples{
 conditional_amce(
