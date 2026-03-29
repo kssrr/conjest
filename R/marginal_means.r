@@ -14,50 +14,30 @@
 #' @examples
 #' marginal_means(data, selected ~ group + sex + age, id = ~id)
 #' @export
-marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, vcov_type = "HC1") {
+marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, vcov_type = "HC1", wts = NULL, design = NULL) {
   
   if (!is.null(formula)) {
     outcome    <- deparse(rlang::f_lhs(formula))
     attributes <- labels(terms(formula))
   }
   
-  validate_inputs(data, attributes, id)
+  parsed_wts <- parse_wts(data, wts, substitute(wts))
+  assert_fct(data, attributes)
   
-  # fit models:
-  
-  mods <- attributes |> lapply(function(x) {
-    lm(reformulate(x, response = outcome, intercept = FALSE), data = data)
-  })
-  
-  # cluster SEs & tidy up results:
-  
-  results <- 
-    purrr::map2(mods, attributes, function(model, attr) {
-      
-      if (!is.null(id)) {
-        
-        processed <- lmtest::coeftest(
-          model,
-          vcov. = sandwich::vcovCL(
-            model,
-            cluster = id,
-            type = vcov_type
-          )
-        )
-        
-      } else {
-        
-        processed <- lmtest::coeftest(model)
-        
-      }
-      
-      processed |> 
-        broom::tidy() |> 
-        dplyr::bind_cols(attribute = attr, level = model$xlevels[[attr]])
-      
-    }) |>
-    dplyr::bind_rows() |> 
-    dplyr::mutate(lower = estimate - std.error, upper = estimate + std.error) |> 
+  results <- purrr::map(attributes, function(attr) {
+    
+    cjlm(
+      data,
+      formula   = reformulate(attr, response = outcome, intercept = FALSE),
+      id        = id,
+      vcov_type = vcov_type,
+      wts       = parsed_wts,
+      design    = design
+    ) |> dplyr::mutate(attribute = attr, level = levels(data[[attr]]))
+    
+  }) |>
+    dplyr::bind_rows() |>
+    dplyr::mutate(lower = estimate - std.error, upper = estimate + std.error) |>
     dplyr::select(attribute, level, term, estimate, std.error, lower, upper)
   
   class(results) <- c("marginal_means", class(results))
@@ -92,7 +72,9 @@ marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NU
 #' @examples
 #' marginal_means(data, selected ~ group + sex + age, id = ~id)
 #' @export
-conditional_marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, group = NULL, vcov_type = "HC1") {
+conditional_marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, group = NULL, vcov_type = "HC1", wts = NULL, design = NULL) {
+  
+  parsed_wts <- parse_wts(data, wts, substitute(wts))
   
   result <- 
     data |> 
@@ -101,13 +83,23 @@ conditional_marginal_means <- function(data, formula = NULL, outcome = NULL, att
     dplyr::mutate(
       mms = lapply(data, function(d) {
         
+        # see the comment in amce.r/amce on this:
+        
+        sub_design <- if (!is.null(design)) {
+          subset(design, rownames(design$variables) %in% rownames(d))
+        } else {
+          NULL
+        } 
+        
         marginal_means(
           d,
           formula = formula,
           outcome = outcome,
           attributes = attributes,
           id = id,
-          vcov_type = vcov_type
+          vcov_type = vcov_type,
+          wts = parsed_wts,
+          design = sub_design
         )
         
       })
