@@ -156,6 +156,25 @@ cjlm_fit_svyglm <- function(formula, design) {
 #' @export
 cjlm <- function(data, formula = NULL, id = NULL, vcov_type = "HC1", wts = NULL, design = NULL) {
   
+  # if we get a survey design, but also get a clustering variable and/or weights,
+  # use the design & warn the user about it. We validate this one here because
+  # `wts` might be an unquoted expression.
+  
+  if (!is.null(design) && (!is.null(id) || !is.null(wts)) ) {
+    
+    ignored <- c(
+      if (!is.null(id))  "id",
+      if (!is.null(wts)) "wts"
+    )
+    
+    cli::cli_warn(c(
+      "{.arg design} is provided alongside {cli::qty(ignored)}{?an/} ignored {cli::qty(ignored)}argument{?s}.",
+      "i" = "{cli::qty(ignored)}{?This argument is/These arguments are} ignored when {.arg design} is provided: {.arg {ignored}}.",
+      "i" = "Weights and clustering should be specified via the {.cls survey.design} object instead if one is provided."
+    ))
+    
+  }
+  
   validate_inputs(
     data, 
     attributes = all.vars(rlang::f_rhs(formula)), 
