@@ -59,6 +59,8 @@ parse_wts <- function(data, wts, wts_expr) {
 #' @noRd
 cjlm_fit_lm <- function(formula, data, wts, id, vcov_type) {
   
+  rlang::check_installed(c("lmtest", "sandwich"))
+  
   model <- do.call(
     lm,
     args = list(formula = formula, data = data, weights = wts)
@@ -86,6 +88,8 @@ cjlm_fit_lm <- function(formula, data, wts, id, vcov_type) {
 #
 #' @noRd
 cjlm_fit_svyglm <- function(formula, design) {
+  
+  rlang::check_installed("survey")
   
   if (!inherits(design, "survey.design")) {
     
