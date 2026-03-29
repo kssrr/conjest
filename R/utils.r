@@ -1,21 +1,25 @@
+# The user can pass design elements (clustering/ID variable, weights) either 
+# directly, or via `survey::svydesign`. 
+#
 #' @noRd
-validate_inputs <- function(data, attributes, id, design) {
+check_design <- function(design, id, wts) {
   
-  # check if all attributes are factors, throw if not:
+  # if we get both a survey design, and manually specified clustering or 
+  # weights, use the design & tell the user about it:
   
-  non_factors <- attributes[!sapply(attributes, function(x) is.factor(data[[x]]))]
-  
-  if (length(non_factors) > 0) {
+  if (!is.null(design) && (!is.null(id) || !is.null(wts)) ) {
     
-    cli::cli_abort(c(
-      "All attributes should be `factor` variables.",
-      "x" = "Non-factor {cli::qty(non_factors)}attribute{?s}: {.var {non_factors}}"
-    ), call = rlang::caller_env())
+    ignored <- c(if (!is.null(id))  "id", if (!is.null(wts)) "wts")
+    
+    cli::cli_warn(c(
+      "{.arg design} is provided alongside {cli::qty(ignored)}{?an/} ignored {cli::qty(ignored)}argument{?s}.",
+      "i" = "{cli::qty(ignored)}{?This argument is/These arguments are} ignored when {.arg design} is provided: {.arg {ignored}}.",
+      "i" = "Weights and/or clustering should be specified via the {.cls survey.design} object instead if one is provided."
+    ))
     
   }
- 
-  # warn the user if no clustering variable is passed
-  # (also do not throw the warning if a design is provided)
+  
+  # if we get neither, warn the user about it as this is probably unintended
   
   if (is.null(id) && is.null(design)) {
     
@@ -25,7 +29,24 @@ validate_inputs <- function(data, attributes, id, design) {
       "i" = "Consider providing {.arg id} to obtain cluster-robust standard errors."
     ), call = rlang::caller_env())
     
-  } 
+  }
+  
+}
+
+# Check if all provided attribute are factors, throw if not (used for AMCE
+# and Marginal Means to ensure coherent behavior).
+#
+#' @noRd
+assert_fct <- function(data, attributes) {
+  
+  non_factors <- attributes[!sapply(attributes, function(x) is.factor(data[[x]]))]
+  
+  if (length(non_factors) > 0) {
+    cli::cli_abort(c(
+      "All attributes should be `factor` variables.",
+      "x" = "Non-factor {cli::qty(non_factors)}attribute{?s}: {.var {non_factors}}"
+    ), call = rlang::caller_env())
+  }
   
 }
 
@@ -156,35 +177,14 @@ cjlm_fit_svyglm <- function(formula, design) {
 #' @export
 cjlm <- function(data, formula = NULL, id = NULL, vcov_type = "HC1", wts = NULL, design = NULL) {
   
-  # if we get a survey design, but also get a clustering variable and/or weights,
-  # use the design & warn the user about it. We validate this one here because
-  # `wts` might be an unquoted expression.
-  
-  if (!is.null(design) && (!is.null(id) || !is.null(wts)) ) {
-    
-    ignored <- c(
-      if (!is.null(id))  "id",
-      if (!is.null(wts)) "wts"
-    )
-    
-    cli::cli_warn(c(
-      "{.arg design} is provided alongside {cli::qty(ignored)}{?an/} ignored {cli::qty(ignored)}argument{?s}.",
-      "i" = "{cli::qty(ignored)}{?This argument is/These arguments are} ignored when {.arg design} is provided: {.arg {ignored}}.",
-      "i" = "Weights and clustering should be specified via the {.cls survey.design} object instead if one is provided."
-    ))
-    
-  }
-  
-  validate_inputs(
-    data, 
-    attributes = all.vars(rlang::f_rhs(formula)), 
-    id = id, 
-    design = design
-  )
-  
+  # try to parse whatever was provided as weights:
   weights <- parse_wts(data, wts, substitute(wts))
   
-  # if a survey-`design` is passed, use `survey`-package as backend,
+  # see what we got as a design & whether it makes sense:
+  check_design(design, id, wts)
+  
+  # Delegate to a backend to fit & tidy the actual model. 
+  # If a survey-`design` is passed, use `survey`-package as backend,
   # otherwise use `stats::lm`:
   
   if (!is.null(design)) {
