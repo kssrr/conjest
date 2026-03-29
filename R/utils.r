@@ -1,5 +1,5 @@
 #' @noRd
-validate_inputs <- function(data, attributes, id) {
+validate_inputs <- function(data, attributes, id, design) {
   
   # check if all attributes are factors, throw if not:
   
@@ -14,9 +14,10 @@ validate_inputs <- function(data, attributes, id) {
     
   }
  
-  # warn the user if no clustering variable is passed:
+  # warn the user if no clustering variable is passed
+  # (also do not throw the warning if a design is provided)
   
-  if (is.null(id)) {
+  if (is.null(id) && is.null(design)) {
     
     cli::cli_warn(c(
       "No clustering variable provided.",
@@ -26,6 +27,77 @@ validate_inputs <- function(data, attributes, id) {
     
   } 
   
+}
+
+# This makes the `wts`-argument more flexible than default `lm`, which takes
+# `NULL` or a numeric vector; we also allow column names, either as strings or
+# unquoted names:
+#
+#' @noRd
+parse_wts <- function(data, wts, wts_expr) {
+  
+  # if we get `NULL` or a numeric vector that is fine:
+  
+  if (is.null(wts) || is.numeric(wts))
+    return(wts)
+  
+  # if we get a string or an unquoted name, try to interpret it as a column
+  # inside `data`
+  
+  col_name <- if (is.character(wts)) wts else deparse(wts_expr)
+  
+  if (!col_name %in% names(data))
+    cli::cli_abort("Column {.var {col_name}} not found in {.arg data}.")
+  
+  data[[col_name]]
+  
+}
+
+
+# Fit linear model using `lm` as backend:
+#
+#' @noRd
+cjlm_fit_lm <- function(formula, data, wts, id, vcov_type) {
+  
+  model <- do.call(
+    lm,
+    args = list(formula = formula, data = data, weights = wts)
+  )
+  
+  if (!is.null(id)) {
+    
+    res <- lmtest::coeftest(
+      model,
+      vcov. = sandwich::vcovCL(model, cluster = id, type = vcov_type)
+    )
+    
+  } else {
+    
+    res <- lmtest::coeftest(model)
+    
+  }
+  
+  broom::tidy(res)
+  
+}
+  
+# Fit linear model using `survey`-package as backend
+# (allows for manually specifying more complex survey designs)
+#
+#' @noRd
+cjlm_fit_svyglm <- function(formula, design) {
+  
+  if (!inherits(design, "survey.design")) {
+    
+    cli::cli_abort(c(
+      "{.arg design} must be a {.cls survey.design} object.",
+      "i" = "Create one with {.fn survey::svydesign}."
+    ))
+    
+  }
+  
+  model <- survey::svyglm(formula, design = design)
+  broom::tidy(model) 
 }
 
 # Utility functions to fit generic model for conjoint analysis
@@ -47,12 +119,20 @@ validate_inputs <- function(data, attributes, id) {
 #' @param data A data frame containing the conjoint data.
 #' @param formula A formula specifying the model, e.g.
 #'   \code{outcome ~ A + B + A:B} or \code{outcome ~ A * B + covariate}.
-#' @param id A one-sided formula specifying the clustering variable for
+#' @param id (Optional) A one-sided formula specifying the clustering variable for
 #'   cluster-robust standard errors, e.g. \code{~uuid}. If \code{NULL},
 #'   standard OLS standard errors are used and a warning is issued.
 #' @param vcov_type The type of heteroskedasticity-consistent covariance
 #'   estimator passed to \code{\link[sandwich]{vcovCL}}. Defaults to
-#'   \code{"HC1"}.
+#'   \code{"HC1"}, allows HC0-HC3.
+#' @param wts (Optional) Weights to be used in the regression. Can be
+#'   \code{NULL} (the default), a numeric vector, or the name of a 
+#'   column in \code{data} (quoted or unquoted).
+#' @param design A \code{survey::svydesign}-object. If a \code{design} is 
+#'   provided, \code{cjlm} uses \code{survey::svyglm} as backend using 
+#'   the provided design, disregarding other arguments like \code{id},
+#'   \code{vcov_type}, and \code{wts}, as all of these are handled
+#'   by \code{survey::svyglm} (see \code{?survey::svyglm}).
 #'
 #' @return A tidy data frame of class \code{cjlm} with columns \code{term},
 #'   \code{estimate}, \code{std.error}, \code{statistic}, and \code{p.value},
@@ -70,39 +150,32 @@ validate_inputs <- function(data, attributes, id) {
 #' cjlm(data, ChosenImmigrant ~ Education + resp_age, id = ~CaseID)
 #'
 #' @export
-cjlm <- function(data, formula = NULL, id = NULL, vcov_type = "HC1") {
+cjlm <- function(data, formula = NULL, id = NULL, vcov_type = "HC1", wts = NULL, design = NULL) {
   
-  validate_inputs(data, attributes = all.vars(rlang::f_rhs(formula)), id = id)
-  
-  model <- lm(formula, data)
-  
-  model <- do.call(
-    lm,
-    args = list(
-      formula = formula, 
-      data = data
-    )
+  validate_inputs(
+    data, 
+    attributes = all.vars(rlang::f_rhs(formula)), 
+    id = id, 
+    design = design
   )
   
+  weights <- parse_wts(data, wts, substitute(wts))
   
-  if (!is.null(id)) {
-    
-    res <- lmtest::coeftest(
-      model, 
-      vcov. = sandwich::vcovCL(
-        model, 
-        cluster = id, 
-        type = vcov_type
-      )
-    )
+  # if a survey-`design` is passed, use `survey`-package as backend,
+  # otherwise use `stats::lm`:
   
+  if (!is.null(design)) {
+    backend <- "`survey::svyglm`"
+    res <- cjlm_fit_svyglm(formula, design)
   } else {
-    res <- lmtest::coeftest(model)
+    backend <- "`stats::lm`"
+    res <- cjlm_fit_lm(formula, data, weights, id, vcov_type)
   }
   
-  res <- broom::tidy(res)
   class(res) <- c("cjlm", class(res))
+  
   attr(res, "id") <- id
+  attr(res, "backend") <- backend
   
   res
   
@@ -162,5 +235,6 @@ summary.cjlm <- function(df, ...) {
   }
   
   cat("Signif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\n")
+  cat(paste("Backend:", attr(df, "backend")))
   
 }
