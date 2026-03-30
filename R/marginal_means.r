@@ -37,31 +37,39 @@
 #' @examples
 #' marginal_means(data, selected ~ group + sex + age, id = ~id)
 #' @export
-marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, vcov_type = "HC1", wts = NULL, design = NULL) {
+marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, wts = NULL, design = NULL) {
   
   if (!is.null(formula)) {
     outcome    <- deparse(rlang::f_lhs(formula))
     attributes <- labels(terms(formula))
   }
   
-  parsed_wts <- parse_wts(data, wts, substitute(wts))
   assert_fct(data, attributes)
   
-  results <- purrr::map(attributes, function(attr) {
+  results <- lapply(attributes, function(attr) {
     
-    cjlm(
+    mod <- cjlm(
       data,
       formula   = reformulate(attr, response = outcome, intercept = FALSE),
       id        = id,
-      vcov_type = vcov_type,
-      wts       = parsed_wts,
+      wts       = wts,
       design    = design
-    ) |> dplyr::mutate(attribute = attr, level = levels(data[[attr]]))
+    )
     
-  }) |>
-    dplyr::bind_rows() |>
-    dplyr::mutate(lower = estimate - std.error, upper = estimate + std.error) |>
-    dplyr::select(attribute, level, term, estimate, std.error, lower, upper)
+    mod$attribute <- attr
+    mod$level <- levels(data[[attr]])
+    
+    mod
+    
+  }) |> do.call(rbind, args = _)
+    
+  results$lower <- results$estimate - results$std.error
+  results$upper <- results$estimate + results$std.error
+  
+  results <- tibble::tibble(results[, c(
+    "attribute", "level", "term", "estimate", 
+    "std.error", "lower", "upper"
+  )])
   
   class(results) <- c("marginal_means", class(results))
   
@@ -110,41 +118,32 @@ marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NU
 #' @export
 conditional_marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, group = NULL, vcov_type = "HC1", wts = NULL, design = NULL) {
   
-  parsed_wts <- parse_wts(data, wts, substitute(wts))
+  # build the design here bc we need to subset it before
+  # passing to `amce` which passes it to `cjlm`
   
-  result <- 
-    data |> 
-    dplyr::group_by({{ group }}) |> 
-    tidyr::nest() |> 
-    dplyr::mutate(
-      mms = lapply(data, function(d) {
-        
-        # see the comment in amce.r/amce on this:
-        # (this is wrong & needs to be fixed)
-        
-        sub_design <- if (!is.null(design)) {
-          subset(design, rownames(design$variables) %in% rownames(d))
-        } else {
-          NULL
-        } 
-        
-        marginal_means(
-          d,
-          formula = formula,
-          outcome = outcome,
-          attributes = attributes,
-          id = id,
-          vcov_type = vcov_type,
-          wts = parsed_wts,
-          design = sub_design
-        )
-        
-      })
-    ) |> 
-    dplyr::select({{ group }}, mms) |> 
-    tidyr::unnest(mms) |> 
-    dplyr::ungroup()
+  full_design <- validate_design(data, design, id, wts)
   
+  groupvar <- deparse(substitute(group))
+  groups <- unique(data[[groupvar]])
+  
+  result <- lapply(groups, function(g) {
+    
+    sub_design <- full_design[full_design$variables[[groupvar]] == g, ]
+    
+    sub_res <- marginal_means(
+      data,
+      formula = formula,
+      outcome = outcome,
+      attributes = attributes,
+      design = sub_design
+    )
+    
+    sub_res[[groupvar]] <- g
+    
+    sub_res
+        
+  }) |> do.call(rbind, args = _)
+   
   class(result) <- c("conditional_marginal_means", class(result))
   attr(result, "group") <- rlang::as_name(rlang::ensym(group))
   

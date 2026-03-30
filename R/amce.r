@@ -80,12 +80,14 @@ amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = N
   results$upper <- results$estimate + results$std.error
   results$lower <- results$estimate - results$std.error
   
-  class(results) <- c("amce", class(results))
-  
-  results[, c(
+  results <- tibble::tibble(results[, c(
     "attribute", "level", "term", "estimate", "std.error", 
     "lower", "upper", "statistic", "p.value"
-  )] |> tibble::tibble()
+  )])
+  
+  class(results) <- c("amce", class(results))
+  
+  results
   
 }
 
@@ -177,7 +179,7 @@ conditional_amce <- function(data, formula = NULL, outcome = NULL, attributes = 
     
     sub_res
         
-  }) |> dplyr::bind_rows()
+  }) |> do.call(rbind, args = _)
   
   class(result) <- c("conditional_amce", class(result))
   attr(result, "group") <- rlang::as_name(rlang::ensym(group))
