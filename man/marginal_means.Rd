@@ -10,7 +10,8 @@ marginal_means(
   outcome = NULL,
   attributes = NULL,
   id = NULL,
-  vcov_type = "HC1"
+  wts = NULL,
+  design = NULL
 )
 }
 \arguments{
@@ -22,16 +23,30 @@ marginal_means(
 
 \item{attributes}{(Alternative to \code{formula}) Character vector of attribute names}
 
-\item{id}{A one-sided formula specifying the ID/cluster variable, e.g. \code{~id}}
+\item{id}{(Optional) A one-sided formula specifying the ID/cluster variable, e.g. \code{~id}}
 
-\item{vcov_type}{Type of variance-covariance estimation when clustering (HC0-HC3). Default is "HC1".}
+\item{wts}{(Optional) Weights to be used in the regression, as a one-sided formula
+(e.g. \code{~weights}).}
+
+\item{design}{(Optional) A \code{survey::svydesign}-object. If a \code{design} is
+provided, \code{cjlm} disregards \code{id} and \code{wts}, and adjusts
+based on the provided design instead.}
 }
 \value{
 A data frame of class \code{marginal_means}
 }
 \description{
-Estimate Marginal Means for a Conjoint Experiment
+Computes marginal means (MMs) for each level of each attribute in a conjoint
+experiment. A marginal mean represents the average outcome, typically the
+probability of a profile being chosen, when a given attribute level is
+present, averaging over all other attributes and their levels. Unlike AMCEs,
+marginal means are not defined relative to a reference category, making them
+better suited for describing absolute levels of support and comparing
+preferences across subgroups. Values above 0.5 indicate that a level
+increases the probability of selection relative to the average profile, and
+values below 0.5 indicate the opposite.
 }
 \examples{
-marginal_means(data, selected ~ group + sex + age, id = ~id)
+data("immigration")
+immigration |> marginal_means(ChosenImmigrant ~ Gender + Education, id = ~CaseID)
 }
