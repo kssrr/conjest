@@ -178,6 +178,8 @@ conditional_amce <- function(data, formula = NULL, outcome = NULL, attributes = 
         # clustering structure, while with `lm` we adjust in the subset only.
         # Should look into this and think about it more at some point.
         
+        # (this is currently producing wrong results and needs to be fixed)
+        
         sub_design <- if (!is.null(design)) {
           subset(design, rownames(design$variables) %in% rownames(d))
         } else {

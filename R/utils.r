@@ -1,25 +1,45 @@
+# Calling handler used everywhere to throw consistent errors
+#
+#' @noRd
+
 # The user can pass design elements (clustering/ID variable, weights) either 
 # directly, or via `survey::svydesign`. 
 #
 #' @noRd
 check_design <- function(design, id, wts) {
   
-  # if we get both a survey design, and manually specified clustering or 
-  # weights, use the design & tell the user about it:
+  # we got a design:
   
-  if (!is.null(design) && (!is.null(id) || !is.null(wts)) ) {
+  if (!is.null(design)) {
     
-    ignored <- c(if (!is.null(id))  "id", if (!is.null(wts)) "wts")
+    if (!inherits(design, "survey.design")) {
+      
+      cli::cli_abort(c(
+        "{.arg design} must be a {.cls survey.design} object.",
+        "i" = "Create one with {.fn survey::svydesign}."
+      ))
+      
+    }
     
-    cli::cli_warn(c(
-      "{.arg design} is provided alongside {cli::qty(ignored)}{?an/} ignored {cli::qty(ignored)}argument{?s}.",
-      "i" = "{cli::qty(ignored)}{?This argument is/These arguments are} ignored when {.arg design} is provided: {.arg {ignored}}.",
-      "i" = "Weights and/or clustering should be specified via the {.cls survey.design} object instead if one is provided."
-    ))
+    # if we also got IDs and/or weights, use the design, drop the other args
+    # & tell the user about it:
+    
+    if (!is.null(id) || !is.null(wts)) {
+      
+      ignored <- c(if (!is.null(id))  "id", if (!is.null(wts)) "wts")
+      
+      cli::cli_warn(c(
+        "{.arg design} is provided alongside {cli::qty(ignored)}{?an/} ignored {cli::qty(ignored)}argument{?s}.",
+        "i" = "{cli::qty(ignored)}{?This argument is/These arguments are} ignored when {.arg design} is provided: {.arg {ignored}}.",
+        "i" = "Weights and/or clustering should be specified via the {.cls survey.design} object instead if one is provided."
+      ))
+      
+    }
     
   }
   
-  # if we get neither, warn the user about it as this is probably unintended
+  # if we get no design AND no ID var, warn the user about it as this is 
+  # probably unintended
   
   if (is.null(id) && is.null(design)) {
     
@@ -72,57 +92,6 @@ parse_wts <- function(data, wts, wts_expr) {
   
   data[[col_name]]
   
-}
-
-
-# Fit linear model using `lm` as backend:
-#
-#' @noRd
-cjlm_fit_lm <- function(formula, data, wts, id, vcov_type) {
-  
-  rlang::check_installed(c("lmtest", "sandwich"))
-  
-  model <- do.call(
-    lm,
-    args = list(formula = formula, data = data, weights = wts)
-  )
-  
-  if (!is.null(id)) {
-    
-    res <- lmtest::coeftest(
-      model,
-      vcov. = sandwich::vcovCL(model, cluster = id, type = vcov_type)
-    )
-    
-  } else {
-    
-    res <- lmtest::coeftest(model)
-    
-  }
-  
-  broom::tidy(res)
-  
-}
-  
-# Fit linear model using `survey`-package as backend
-# (allows for manually specifying more complex survey designs)
-#
-#' @noRd
-cjlm_fit_svyglm <- function(formula, design) {
-  
-  rlang::check_installed("survey")
-  
-  if (!inherits(design, "survey.design")) {
-    
-    cli::cli_abort(c(
-      "{.arg design} must be a {.cls survey.design} object.",
-      "i" = "Create one with {.fn survey::svydesign}."
-    ))
-    
-  }
-  
-  model <- survey::svyglm(formula, design = design)
-  broom::tidy(model) 
 }
 
 # Utility functions to fit generic model for conjoint analysis
@@ -182,23 +151,17 @@ cjlm <- function(data, formula = NULL, id = NULL, vcov_type = "HC1", wts = NULL,
   
   # see what we got as a design & whether it makes sense:
   check_design(design, id, wts)
+
   
-  # Delegate to a backend to fit & tidy the actual model. 
-  # If a survey-`design` is passed, use `survey`-package as backend,
-  # otherwise use `stats::lm`:
+  if (is.null(design))
+    design <- survey::svydesign(id = id, weight = wts, data = data)
   
-  if (!is.null(design)) {
-    backend <- "`survey::svyglm`"
-    res <- cjlm_fit_svyglm(formula, design)
-  } else {
-    backend <- "`stats::lm`"
-    res <- cjlm_fit_lm(formula, data, weights, id, vcov_type)
-  }
+  model <- survey::svyglm(formula, design) 
+  res <- broom::tidy(model)
   
   class(res) <- c("cjlm", class(res))
-  
   attr(res, "id") <- id
-  attr(res, "backend") <- backend
+  attr(res, "model") <- model
   
   res
   

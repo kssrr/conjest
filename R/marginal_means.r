@@ -120,6 +120,7 @@ conditional_marginal_means <- function(data, formula = NULL, outcome = NULL, att
       mms = lapply(data, function(d) {
         
         # see the comment in amce.r/amce on this:
+        # (this is wrong & needs to be fixed)
         
         sub_design <- if (!is.null(design)) {
           subset(design, rownames(design$variables) %in% rownames(d))
