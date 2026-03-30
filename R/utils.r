@@ -1,55 +1,50 @@
-# Calling handler used everywhere to throw consistent errors
-#
-#' @noRd
-
 # The user can pass design elements (clustering/ID variable, weights) either 
-# directly, or via `survey::svydesign`. 
+# directly, or via `survey::svydesign`. This function makes sure that we always
+# end up with a valid design object to give to `survey::svyglm`, which does the
+# actual estimation.
 #
 #' @noRd
-check_design <- function(design, id, wts) {
-  
-  # we got a design:
+validate_design <- function(data, design, id, wts) {
   
   if (!is.null(design)) {
     
     if (!inherits(design, "survey.design")) {
-      
       cli::cli_abort(c(
         "{.arg design} must be a {.cls survey.design} object.",
         "i" = "Create one with {.fn survey::svydesign}."
-      ))
-      
+      ), call = rlang::caller_env())
     }
     
-    # if we also got IDs and/or weights, use the design, drop the other args
-    # & tell the user about it:
+    # warn if id/wts are also provided since they will be ignored
     
-    if (!is.null(id) || !is.null(wts)) {
-      
-      ignored <- c(if (!is.null(id))  "id", if (!is.null(wts)) "wts")
-      
-      cli::cli_warn(c(
-        "{.arg design} is provided alongside {cli::qty(ignored)}{?an/} ignored {cli::qty(ignored)}argument{?s}.",
-        "i" = "{cli::qty(ignored)}{?This argument is/These arguments are} ignored when {.arg design} is provided: {.arg {ignored}}.",
-        "i" = "Weights and/or clustering should be specified via the {.cls survey.design} object instead if one is provided."
-      ))
-      
+    ignored <- c(if (!is.null(id)) "id", if (!is.null(wts)) "wts")
+    
+    if (length(ignored) > 0) {
+      cli::cli_inform(c(
+        "{cli::qty(ignored)}{?This argument is/These arguments are} ignored when {.arg design} is provided: {.arg {ignored}}.",
+        "i" = "Weights and clustering should be specified via the {.cls survey.design} object."
+      ), call = rlang::caller_env())
     }
+    
+    return(design)
     
   }
   
-  # if we get no design AND no ID var, warn the user about it as this is 
-  # probably unintended
+  # no design & no id/clustering variable = probably unintended, warn the user
   
-  if (is.null(id) && is.null(design)) {
-    
+  if (is.null(id)) {
     cli::cli_warn(c(
       "No clustering variable provided.",
       "i" = "Conjoint experiments typically have repeated observations per respondent.",
       "i" = "Consider providing {.arg id} to obtain cluster-robust standard errors."
     ), call = rlang::caller_env())
-    
   }
+  
+  survey::svydesign(
+    ids = if (!is.null(id)) id else ~1,
+    weights = wts,
+    data = data
+  )
   
 }
 
@@ -67,30 +62,6 @@ assert_fct <- function(data, attributes) {
       "x" = "Non-factor {cli::qty(non_factors)}attribute{?s}: {.var {non_factors}}"
     ), call = rlang::caller_env())
   }
-  
-}
-
-# This makes the `wts`-argument more flexible than default `lm`, which takes
-# `NULL` or a numeric vector; we also allow column names, either as strings or
-# unquoted names:
-#
-#' @noRd
-parse_wts <- function(data, wts, wts_expr) {
-  
-  # if we get `NULL` or a numeric vector that is fine:
-  
-  if (is.null(wts) || is.numeric(wts))
-    return(wts)
-  
-  # if we get a string or an unquoted name, try to interpret it as a column
-  # inside `data`
-  
-  col_name <- if (is.character(wts)) wts else deparse(wts_expr)
-  
-  if (!col_name %in% names(data))
-    cli::cli_abort("Column {.var {col_name}} not found in {.arg data}.")
-  
-  data[[col_name]]
   
 }
 
@@ -116,46 +87,41 @@ parse_wts <- function(data, wts, wts_expr) {
 #' @param id (Optional) A one-sided formula specifying the clustering variable for
 #'   cluster-robust standard errors, e.g. \code{~uuid}. If \code{NULL},
 #'   standard OLS standard errors are used and a warning is issued.
-#' @param vcov_type The type of heteroskedasticity-consistent covariance
-#'   estimator passed to \code{\link[sandwich]{vcovCL}}. Defaults to
-#'   \code{"HC1"}, allows HC0-HC3.
-#' @param wts (Optional) Weights to be used in the regression. Can be
-#'   \code{NULL} (the default), a numeric vector, or the name of a 
-#'   column in \code{data} (quoted or unquoted).
-#' @param design A \code{survey::svydesign}-object. If a \code{design} is 
-#'   provided, \code{cjlm} uses \code{survey::svyglm} as backend using 
-#'   the provided design, disregarding other arguments like \code{id},
-#'   \code{vcov_type}, and \code{wts}, as all of these are handled
-#'   by \code{survey::svyglm} (see \code{?survey::svyglm}).
+#' @param wts (Optional) Weights to be used in the regression as one-sided formula,
+#'   e.g. \code{~weights}.
+#' @param design (Optional) A \code{survey::svydesign}-object. If a `design` is
+#'   passed, `id` and `wts` are ignored (they should be passed via the design).
 #'
 #' @return A tidy data frame of class \code{cjlm} with columns \code{term},
 #'   \code{estimate}, \code{std.error}, \code{statistic}, and \code{p.value},
-#'   as returned by \code{\link[broom]{tidy}}. The clustering variable is
-#'   stored as an attribute on the result.
+#'   as returned by \code{\link[broom]{tidy}}. The model object is stored as an 
+#'   attribute of the result and can be retrieved via \code{attr(result, "model")}
+#'   if needed.
 #'
 #' @seealso \code{\link{amce}}, \code{\link{marginal_means}},
 #'   \code{\link{conditional_amce}}, \code{\link{conditional_marginal_means}}
 #'
 #' @examples
 #' # Custom interaction model not covered by amce()
-#' cjlm(data, ChosenImmigrant ~ Education * Gender, id = ~CaseID)
-#'
-#' # Model with a respondent-level covariate
-#' cjlm(data, ChosenImmigrant ~ Education + resp_age, id = ~CaseID)
+#' data("immigration")
+#' 
+#' cjlm(immigration, ChosenImmigrant ~ Education * Gender, id = ~CaseID)
+#' 
+#' # The actual model can also be retrieved from the result:
+#' 
+#' res <- immigration |> cjlm(ChosenImmigrant ~ Education * Gender, id = ~CaseID)
+#' res |> attr("model")
+#' 
+#' # Custom methods:
+#' summary(res)
+#' print(res)
+#' ggplot2::autoplot(res)
 #'
 #' @export
 cjlm <- function(data, formula = NULL, id = NULL, vcov_type = "HC1", wts = NULL, design = NULL) {
   
-  # try to parse whatever was provided as weights:
-  weights <- parse_wts(data, wts, substitute(wts))
-  
-  # see what we got as a design & whether it makes sense:
-  check_design(design, id, wts)
+  design <- validate_design(data, design, id, wts)
 
-  
-  if (is.null(design))
-    design <- survey::svydesign(id = id, weight = wts, data = data)
-  
   model <- survey::svyglm(formula, design) 
   res <- broom::tidy(model)
   
@@ -169,6 +135,8 @@ cjlm <- function(data, formula = NULL, id = NULL, vcov_type = "HC1", wts = NULL,
 
 #' @export
 summary.cjlm <- function(df, ...) {
+  
+  # add stars for significance levels & format numbers
   
   df <- 
     df |> 
@@ -191,7 +159,7 @@ summary.cjlm <- function(df, ...) {
       })
     )
   
-  # Printout:
+  # Printing:
   
   cat("\nConjoint Analysis (Linear Model)\n\n")
   
@@ -207,20 +175,6 @@ summary.cjlm <- function(df, ...) {
   
   print(out, row.names = FALSE)
   cat("\n")
-  
-  id <- attr(df, "id")
-  
-  if (!is.null(id)) {
-    
-    cat(paste(
-      "Standard errors clustered by:",
-      paste(all.vars(rlang::f_rhs(id)), collapse = ", "),
-      "\n"
-    ))
-    
-  }
-  
   cat("Signif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\n")
-  cat(paste("Backend:", attr(df, "backend")))
   
 }
