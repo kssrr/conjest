@@ -11,7 +11,6 @@ conditional_marginal_means(
   attributes = NULL,
   id = NULL,
   group = NULL,
-  vcov_type = "HC1",
   wts = NULL,
   design = NULL
 )
@@ -30,17 +29,12 @@ conditional_marginal_means(
 \item{group}{The respondent-level grouping variable (unquoted). Marginal
 means are estimated separately for each level of this variable.}
 
-\item{vcov_type}{Type of variance-covariance estimation when clustering (HC0-HC3). Default is "HC1".}
+\item{wts}{(Optional) Weights to be used in the regression, as a one-sided
+formula (e.g. \code{~weights}).}
 
-\item{wts}{(Optional) Weights to be used in the regression. Can be
-\code{NULL} (the default), a numeric vector, or the name of a
-column in \code{data} (quoted or unquoted).}
-
-\item{design}{A \code{survey::svydesign}-object. If a \code{design} is
-provided, \code{cjlm} uses \code{survey::svyglm} as backend using
-the provided design, disregarding other arguments like \code{id},
-\code{vcov_type}, and \code{wts}, as all of these are handled
-by \code{survey::svyglm} (see \code{?survey::svyglm}).}
+\item{design}{A \code{survey::svydesign}-object. If a \code{design} is provided,
+\code{id} and \code{weights} are ignored, and adjustments are made based
+on the provided design instead.}
 }
 \value{
 A data frame of class \code{marginal_means}
@@ -52,14 +46,8 @@ subgroups. This approach is preferred over conditional AMCEs for subgroup analys
 marginal means do not require a baseline, and are thus not sensitive to the choice of a baseline
 category. This was recommended by Leeper, Hobolt & Tilley (2020).
 }
-\details{
-By default, the function uses \code{stats::lm} to estimate the model, and
-\code{sandwich} to adjust standard errors if needed. However, you can also pass
-a surveydesign (\code{survey::svydesign}), in which case \code{survey::svyglm}
-will be used.
-}
 \examples{
-marginal_means(data, selected ~ group + sex + age, id = ~id)
+data |> conditional_marginal_means(selected ~ sex + age, group = resp_age, id = ~id)
 }
 \references{
 Leeper, T. J., Hobolt, S. B., and Tilley, J. (2020). Measuring

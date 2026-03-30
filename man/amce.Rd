@@ -10,7 +10,6 @@ amce(
   outcome = NULL,
   attributes = NULL,
   id = NULL,
-  vcov_type = "HC1",
   wts = NULL,
   design = NULL
 )
@@ -30,39 +29,39 @@ If provided, \code{outcome} and \code{attributes} are ignored.}
 \item{id}{(Optional) A one-sided formula specifying the clustering variable for
 cluster-robust standard errors, e.g. \code{~id}.}
 
-\item{vcov_type}{Type of variance-covariance estimation when clustering (HC0-HC3). Default is "HC1".}
-
-\item{wts}{(Optional) Weights to be used in the regression. Can be
-\code{NULL} (the default), a numeric vector, or the name of a
-column in \code{data} (quoted or unquoted).}
+\item{wts}{(Optional) Weights to be used in the regression, as a one-sided
+formula, e.g. \code{~weights}}
 
 \item{design}{A \code{survey::svydesign}-object. If a \code{design} is
-provided, \code{cjlm} uses \code{survey::svyglm} as backend using
-the provided design, disregarding other arguments like \code{id},
-\code{vcov_type}, and \code{wts}, as all of these are handled
-by \code{survey::svyglm} (see \code{?survey::svyglm}).}
+provided, \code{id} and \code{wts} are ignored, and adjustments are made
+based on the provided design instead.}
 }
 \value{
 A data frame of class \code{amce}.
 }
 \description{
-Fits a linear probability model and computes AMCEs with
-cluster-robust standard errors. The reference level for each attribute is
-included is the first level of each variable. Note that attributes have to
-be factors.
-}
-\details{
-By default, the function uses \code{stats::lm} to estimate the model, and
-\code{sandwich} to adjust standard errors if needed. However, you can also pass
-a surveydesign (\code{survey::svydesign}), in which case \code{survey::svyglm}
-will be used.
+Computes average marginal component effects (AMCEs) for each level of each
+attribute in a conjoint experiment. The AMCE represents the causal effect of
+a given attribute level on the outcome, typically the probability of a
+profile being chosen, relative to a baseline level, averaging over the
+joint distribution of all other attributes. AMCEs have a clear causal
+interpretation under the randomisation of the conjoint design, as introduced
+by Hainmueller, Hopkins, and Yamamoto (2014). The baseline level for each
+attribute is included in the output with an estimate of zero. Note that
+AMCEs are defined relative to the chosen reference category, and are thus
+sensitive to the choice of reference category.
 }
 \examples{
-amce(data, selected ~ group + sex + age, id = ~uuid)
+data("immigration")
 
-# Equivalent using outcome and attributes directly
-amce(data, outcome = "selected", attributes = c("group", "sex", "age"), id = ~uuid)
+immigration |> amce(ChosenImmigrant ~ Education + Gender, id = ~CaseID)
 
+}
+\references{
+Hainmueller, J., Hopkins, D. J., and Yamamoto, T. (2014). Causal Inference
+in Conjoint Analysis: Understanding Multidimensional Choices via Stated
+Preference Experiments. \emph{Political Analysis}, 22(1), 1--30.
+\doi{10.1093/pan/mpt024}
 }
 \seealso{
 \code{\link{autoplot.amce}}, \code{\link{marginal_means}}

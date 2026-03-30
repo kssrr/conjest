@@ -1,9 +1,15 @@
 #' Estimate Average Marginal Component Effects (AMCEs) for a Conjoint Experiment
 #'
-#' Fits a linear probability model and computes AMCEs with
-#' cluster-robust standard errors. The reference level for each attribute is
-#' included is the first level of each variable. Note that attributes have to
-#' be factors.
+#' Computes average marginal component effects (AMCEs) for each level of each
+#' attribute in a conjoint experiment. The AMCE represents the causal effect of
+#' a given attribute level on the outcome, typically the probability of a
+#' profile being chosen, relative to a baseline level, averaging over the
+#' joint distribution of all other attributes. AMCEs have a clear causal
+#' interpretation under the randomisation of the conjoint design, as introduced
+#' by Hainmueller, Hopkins, and Yamamoto (2014). The baseline level for each
+#' attribute is included in the output with an estimate of zero. Note that
+#' AMCEs are defined relative to the chosen reference category, and are thus 
+#' sensitive to the choice of reference category.
 #'
 #' @param data A data frame containing the conjoint data.
 #' @param formula A formula of the form \code{outcome ~ attr1 + attr2 + ...}.
@@ -14,24 +20,26 @@
 #'   \code{formula} is provided.
 #' @param id (Optional) A one-sided formula specifying the clustering variable for
 #'   cluster-robust standard errors, e.g. \code{~id}.
-#' @param wts (Optional) Weights to be used in the regression. Can be
-#'   \code{NULL} (the default), a numeric vector, or the name of a 
-#'   column in \code{data} (quoted or unquoted).
+#' @param wts (Optional) Weights to be used in the regression, as a one-sided
+#'   formula, e.g. \code{~weights}
 #' @param design A \code{survey::svydesign}-object. If a \code{design} is 
-#'   provided, \code{cjlm} uses \code{survey::svyglm} as backend using 
-#'   the provided design, disregarding other arguments like \code{id},
-#'   \code{vcov_type}, and \code{wts}, as all of these are handled
-#'   by \code{survey::svyglm} (see \code{?survey::svyglm}).
+#'   provided, \code{id} and \code{wts} are ignored, and adjustments are made
+#'   based on the provided design instead.
 #'
 #' @return A data frame of class \code{amce}.
 #'
+#' @references
+#'   Hainmueller, J., Hopkins, D. J., and Yamamoto, T. (2014). Causal Inference
+#'   in Conjoint Analysis: Understanding Multidimensional Choices via Stated
+#'   Preference Experiments. \emph{Political Analysis}, 22(1), 1--30.
+#'   \doi{10.1093/pan/mpt024}
+#' 
 #' @seealso \code{\link{autoplot.amce}}, \code{\link{marginal_means}}
 #'
 #' @examples
-#' amce(data, selected ~ group + sex + age, id = ~uuid)
-#'
-#' # Equivalent using outcome and attributes directly
-#' amce(data, outcome = "selected", attributes = c("group", "sex", "age"), id = ~uuid)
+#' data("immigration")
+#' 
+#' immigration |> amce(ChosenImmigrant ~ Education + Gender, id = ~CaseID)
 #'
 #' @export
 amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, wts = NULL, design = NULL) {
@@ -95,17 +103,13 @@ amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = N
 #'
 #' Computes AMCEs separately for each level of a respondent-level grouping
 #' variable.  Conditional AMCEs provide insight into variation in preferences 
-#' within groups, but they do not say anything about absolute favorability, and 
+#' within groups, but they do not say anything about absolute favorability (as
+#' AMCEs are sensitive to the choice of the reference category), and 
 #' thus do not provide direct insight about patterns of preferences 
 #' between groups (Leeper, Hobolt & Tilley, 2020). For comparing
 #' absolute levels of favorability across subgroups, use
 #' \code{\link{conditional_marginal_means}} instead.
 #' 
-#' By default, the function uses \code{stats::lm} to estimate the model, and 
-#' \code{sandwich} to adjust standard errors if needed. However, you can also pass
-#' a surveydesign (\code{survey::svydesign}), in which case \code{survey::svyglm}
-#' will be used.
-#'
 #' @param data A data frame containing the conjoint data.
 #' @param formula A formula of the form \code{outcome ~ attr1 + attr2 + ...}.
 #'   If provided, \code{outcome} and \code{attributes} are ignored.
@@ -114,21 +118,14 @@ amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = N
 #' @param attributes Character vector of attribute names. Ignored if
 #'   \code{formula} is provided.
 #' @param id (Optional) A one-sided formula specifying the clustering variable for
-#'   cluster-robust standard errors, e.g. \code{~uuid}. If \code{NULL},
-#'   standard OLS standard errors are used and a warning is issued.
+#'   cluster-robust standard errors, e.g. \code{~uuid}.
 #' @param group The respondent-level grouping variable (unquoted). AMCEs are
 #'   estimated separately for each level of this variable.
-#' @param vcov_type The type of heteroskedasticity-consistent covariance
-#'   estimator passed to \code{\link[sandwich]{vcovCL}}. Defaults to
-#'   \code{"HC1"}.
-#' @param wts (Optional) Weights to be used in the regression. Can be
-#'   \code{NULL} (the default), a numeric vector, or the name of a 
-#'   column in \code{data} (quoted or unquoted).
+#' @param wts (Optional) Weights to be used in the regression, as a one-sided
+#'   formula, e.g. \code{~weights}.
 #' @param design A \code{survey::svydesign}-object. If a \code{design} is 
-#'   provided, \code{cjlm} uses \code{survey::svyglm} as backend using 
-#'   the provided design, disregarding other arguments like \code{id},
-#'   \code{vcov_type}, and \code{wts}, as all of these are handled
-#'   by \code{survey::svyglm} (see \code{?survey::svyglm}).
+#'   provided, \code{id} and \code{wts} are ignored, and adjustments are made 
+#'   based on the provided design instead.
 #'
 #' @return A data frame of class \code{conditional_amce} with the same columns
 #'   as \code{\link{amce}}, plus a column for the grouping variable. The name
@@ -149,7 +146,7 @@ amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = N
 #'   data,
 #'   selected ~ group + sex + age,
 #'   id    = ~uuid,
-#'   group = resp_male
+#'   group = resp_sex
 #' )
 #'
 #' @export

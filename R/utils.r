@@ -1,3 +1,6 @@
+# These are the functions that do most of the work in the background, along some
+# smaller helpers, validators, etc.
+
 # The user can pass design elements (clustering/ID variable, weights) either 
 # directly, or via `survey::svydesign`. This function makes sure that we always
 # end up with a valid design object to give to `survey::svyglm`, which does the
@@ -80,6 +83,10 @@ make_stars <- function(p, thresholds = c(.001, .01, .05, .1), labels = c("***", 
   
 }
 
+# "Pretty" number formatting; use scientific notation if numbers get too large
+# or small.
+#
+#' @noRd
 format_number <- function(x, thres = 1e-4) {
   ifelse(
     abs(x) < thres,
@@ -94,10 +101,9 @@ format_number <- function(x, thres = 1e-4) {
 #
 #' Fit a Custom Linear Model for Conjoint Data
 #'
-#' A flexible low-level function for fitting arbitrary linear models to conjoint
-#' data with optional cluster-robust standard errors. Unlike \code{\link{amce}}
-#' and \code{\link{marginal_means}} — which handle formula parsing, baseline
-#' reconstruction, and result formatting automatically — \code{cjlm} is intended
+#' Fit arbitrary linear models to conjoint data. Unlike \code{\link{amce}}
+#' and \code{\link{marginal_means}}, which handle formula parsing, baseline
+#' reconstruction, and result formatting automatically, \code{cjlm} is intended
 #' for custom model specifications that do not fit the other functions in this package, 
 #' such as models with interactions, continuous predictors, or
 #' respondent-level covariates. The result is a tidy data frame of coefficients
@@ -107,8 +113,7 @@ format_number <- function(x, thres = 1e-4) {
 #' @param formula A formula specifying the model, e.g.
 #'   \code{outcome ~ A + B + A:B} or \code{outcome ~ A * B + covariate}.
 #' @param id (Optional) A one-sided formula specifying the clustering variable for
-#'   cluster-robust standard errors, e.g. \code{~uuid}. If \code{NULL},
-#'   standard OLS standard errors are used and a warning is issued.
+#'   cluster-robust standard errors, e.g. \code{~uuid}.
 #' @param wts (Optional) Weights to be used in the regression as one-sided formula,
 #'   e.g. \code{~weights}.
 #' @param design (Optional) A \code{survey::svydesign}-object. If a `design` is
@@ -138,7 +143,6 @@ format_number <- function(x, thres = 1e-4) {
 #' summary(res)
 #' print(res)
 #' ggplot2::autoplot(res)
-#'
 #'
 #' @export
 cjlm <- function(data, formula = NULL, id = NULL, wts = NULL, design = NULL) {

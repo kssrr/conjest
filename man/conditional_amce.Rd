@@ -11,7 +11,6 @@ conditional_amce(
   attributes = NULL,
   id = NULL,
   group = NULL,
-  vcov_type = "HC1",
   wts = NULL,
   design = NULL
 )
@@ -29,25 +28,17 @@ If provided, \code{outcome} and \code{attributes} are ignored.}
 \code{formula} is provided.}
 
 \item{id}{(Optional) A one-sided formula specifying the clustering variable for
-cluster-robust standard errors, e.g. \code{~uuid}. If \code{NULL},
-standard OLS standard errors are used and a warning is issued.}
+cluster-robust standard errors, e.g. \code{~uuid}.}
 
 \item{group}{The respondent-level grouping variable (unquoted). AMCEs are
 estimated separately for each level of this variable.}
 
-\item{vcov_type}{The type of heteroskedasticity-consistent covariance
-estimator passed to \code{\link[sandwich]{vcovCL}}. Defaults to
-\code{"HC1"}.}
-
-\item{wts}{(Optional) Weights to be used in the regression. Can be
-\code{NULL} (the default), a numeric vector, or the name of a
-column in \code{data} (quoted or unquoted).}
+\item{wts}{(Optional) Weights to be used in the regression, as a one-sided
+formula, e.g. \code{~weights}.}
 
 \item{design}{A \code{survey::svydesign}-object. If a \code{design} is
-provided, \code{cjlm} uses \code{survey::svyglm} as backend using
-the provided design, disregarding other arguments like \code{id},
-\code{vcov_type}, and \code{wts}, as all of these are handled
-by \code{survey::svyglm} (see \code{?survey::svyglm}).}
+provided, \code{id} and \code{wts} are ignored, and adjustments are made
+based on the provided design instead.}
 }
 \value{
 A data frame of class \code{conditional_amce} with the same columns
@@ -59,24 +50,19 @@ by \code{\link{autoplot.conditional_amce}} and
 \description{
 Computes AMCEs separately for each level of a respondent-level grouping
 variable.  Conditional AMCEs provide insight into variation in preferences
-within groups, but they do not say anything about absolute favorability, and
+within groups, but they do not say anything about absolute favorability (as
+AMCEs are sensitive to the choice of the reference category), and
 thus do not provide direct insight about patterns of preferences
 between groups (Leeper, Hobolt & Tilley, 2020). For comparing
 absolute levels of favorability across subgroups, use
 \code{\link{conditional_marginal_means}} instead.
-}
-\details{
-By default, the function uses \code{stats::lm} to estimate the model, and
-\code{sandwich} to adjust standard errors if needed. However, you can also pass
-a surveydesign (\code{survey::svydesign}), in which case \code{survey::svyglm}
-will be used.
 }
 \examples{
 conditional_amce(
   data,
   selected ~ group + sex + age,
   id    = ~uuid,
-  group = resp_male
+  group = resp_sex
 )
 
 }

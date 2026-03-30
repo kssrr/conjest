@@ -4,14 +4,7 @@
 \alias{cjlm}
 \title{Fit a Custom Linear Model for Conjoint Data}
 \usage{
-cjlm(
-  data,
-  formula = NULL,
-  id = NULL,
-  vcov_type = "HC1",
-  wts = NULL,
-  design = NULL
-)
+cjlm(data, formula = NULL, id = NULL, wts = NULL, design = NULL)
 }
 \arguments{
 \item{data}{A data frame containing the conjoint data.}
@@ -20,34 +13,25 @@ cjlm(
 \code{outcome ~ A + B + A:B} or \code{outcome ~ A * B + covariate}.}
 
 \item{id}{(Optional) A one-sided formula specifying the clustering variable for
-cluster-robust standard errors, e.g. \code{~uuid}. If \code{NULL},
-standard OLS standard errors are used and a warning is issued.}
+cluster-robust standard errors, e.g. \code{~uuid}.}
 
-\item{vcov_type}{The type of heteroskedasticity-consistent covariance
-estimator passed to \code{\link[sandwich]{vcovCL}}. Defaults to
-\code{"HC1"}, allows HC0-HC3.}
+\item{wts}{(Optional) Weights to be used in the regression as one-sided formula,
+e.g. \code{~weights}.}
 
-\item{wts}{(Optional) Weights to be used in the regression. Can be
-\code{NULL} (the default), a numeric vector, or the name of a
-column in \code{data} (quoted or unquoted).}
-
-\item{design}{A \code{survey::svydesign}-object. If a \code{design} is
-provided, \code{cjlm} uses \code{survey::svyglm} as backend using
-the provided design, disregarding other arguments like \code{id},
-\code{vcov_type}, and \code{wts}, as all of these are handled
-by \code{survey::svyglm} (see \code{?survey::svyglm}).}
+\item{design}{(Optional) A \code{survey::svydesign}-object. If a \code{design} is
+passed, \code{id} and \code{wts} are ignored (they should be passed via the design).}
 }
 \value{
 A tidy data frame of class \code{cjlm} with columns \code{term},
 \code{estimate}, \code{std.error}, \code{statistic}, and \code{p.value},
-as returned by \code{\link[broom]{tidy}}. The clustering variable is
-stored as an attribute on the result.
+as returned by \code{\link[broom]{tidy}}. The model object is stored as an
+attribute of the result and can be retrieved via \code{attr(result, "model")}
+if needed.
 }
 \description{
-A flexible low-level function for fitting arbitrary linear models to conjoint
-data with optional cluster-robust standard errors. Unlike \code{\link{amce}}
-and \code{\link{marginal_means}} — which handle formula parsing, baseline
-reconstruction, and result formatting automatically — \code{cjlm} is intended
+Fit arbitrary linear models to conjoint data. Unlike \code{\link{amce}}
+and \code{\link{marginal_means}}, which handle formula parsing, baseline
+reconstruction, and result formatting automatically, \code{cjlm} is intended
 for custom model specifications that do not fit the other functions in this package,
 such as models with interactions, continuous predictors, or
 respondent-level covariates. The result is a tidy data frame of coefficients
@@ -55,10 +39,19 @@ that the user can process and plot as needed.
 }
 \examples{
 # Custom interaction model not covered by amce()
-cjlm(data, ChosenImmigrant ~ Education * Gender, id = ~CaseID)
+data("immigration")
 
-# Model with a respondent-level covariate
-cjlm(data, ChosenImmigrant ~ Education + resp_age, id = ~CaseID)
+cjlm(immigration, ChosenImmigrant ~ Education * Gender, id = ~CaseID)
+
+# The actual model can also be retrieved from the result:
+
+res <- immigration |> cjlm(ChosenImmigrant ~ Education * Gender, id = ~CaseID)
+res |> attr("model")
+
+# Custom methods:
+summary(res)
+print(res)
+ggplot2::autoplot(res)
 
 }
 \seealso{

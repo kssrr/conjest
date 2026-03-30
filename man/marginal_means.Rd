@@ -10,7 +10,6 @@ marginal_means(
   outcome = NULL,
   attributes = NULL,
   id = NULL,
-  vcov_type = "HC1",
   wts = NULL,
   design = NULL
 )
@@ -24,19 +23,14 @@ marginal_means(
 
 \item{attributes}{(Alternative to \code{formula}) Character vector of attribute names}
 
-\item{id}{A one-sided formula specifying the ID/cluster variable, e.g. \code{~id}}
+\item{id}{(Optional) A one-sided formula specifying the ID/cluster variable, e.g. \code{~id}}
 
-\item{vcov_type}{Type of variance-covariance estimation when clustering (HC0-HC3). Default is "HC1".}
+\item{wts}{(Optional) Weights to be used in the regression, as a one-sided formula
+(e.g. \code{~weights}).}
 
-\item{wts}{(Optional) Weights to be used in the regression. Can be
-\code{NULL} (the default), a numeric vector, or the name of a
-column in \code{data} (quoted or unquoted).}
-
-\item{design}{A \code{survey::svydesign}-object. If a \code{design} is
-provided, \code{cjlm} uses \code{survey::svyglm} as backend using
-the provided design, disregarding other arguments like \code{id},
-\code{vcov_type}, and \code{wts}, as all of these are handled
-by \code{survey::svyglm} (see \code{?survey::svyglm}).}
+\item{design}{(Optional) A \code{survey::svydesign}-object. If a \code{design} is
+provided, \code{cjlm} disregards \code{id} and \code{wts}, and adjusts
+based on the provided design instead.}
 }
 \value{
 A data frame of class \code{marginal_means}
@@ -52,12 +46,7 @@ preferences across subgroups. Values above 0.5 indicate that a level
 increases the probability of selection relative to the average profile, and
 values below 0.5 indicate the opposite.
 }
-\details{
-By default, the function uses \code{stats::lm} to estimate the model, and
-\code{sandwich} to adjust standard errors if needed. However, you can also pass
-a surveydesign (\code{survey::svydesign}), in which case \code{survey::svyglm}
-will be used.
-}
 \examples{
-marginal_means(data, selected ~ group + sex + age, id = ~id)
+data("immigration")
+immigration |> marginal_means(ChosenImmigrant ~ Gender + Education, id = ~CaseID)
 }

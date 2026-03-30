@@ -12,30 +12,22 @@
 #' increases the probability of selection relative to the average profile, and
 #' values below 0.5 indicate the opposite.
 #' 
-#' By default, the function uses \code{stats::lm} to estimate the model, and 
-#' \code{sandwich} to adjust standard errors if needed. However, you can also pass
-#' a surveydesign (\code{survey::svydesign}), in which case \code{survey::svyglm}
-#' will be used.
-#' 
 #' @param data A data frame containing the conjoint data
 #' @param formula A formula of the form `outcome ~ attr1 + attr2 + ...`
 #' @param outcome (Alternative to `formula`) Character string naming the outcome variable
 #' @param attributes (Alternative to `formula`) Character vector of attribute names
-#' @param id A one-sided formula specifying the ID/cluster variable, e.g. `~id`
-#' @param vcov_type Type of variance-covariance estimation when clustering (HC0-HC3). Default is "HC1".
-#' @param wts (Optional) Weights to be used in the regression. Can be
-#'   \code{NULL} (the default), a numeric vector, or the name of a 
-#'   column in \code{data} (quoted or unquoted).
-#' @param design A \code{survey::svydesign}-object. If a \code{design} is 
-#'   provided, \code{cjlm} uses \code{survey::svyglm} as backend using 
-#'   the provided design, disregarding other arguments like \code{id},
-#'   \code{vcov_type}, and \code{wts}, as all of these are handled
-#'   by \code{survey::svyglm} (see \code{?survey::svyglm}).
+#' @param id (Optional) A one-sided formula specifying the ID/cluster variable, e.g. `~id`
+#' @param wts (Optional) Weights to be used in the regression, as a one-sided formula
+#'   (e.g. \code{~weights}).
+#' @param design (Optional) A \code{survey::svydesign}-object. If a \code{design} is 
+#'   provided, \code{cjlm} disregards \code{id} and \code{wts}, and adjusts
+#'   based on the provided design instead.
 #'
 #' @return A data frame of class `marginal_means`
 #'
 #' @examples
-#' marginal_means(data, selected ~ group + sex + age, id = ~id)
+#' data("immigration")
+#' immigration |> marginal_means(ChosenImmigrant ~ Gender + Education, id = ~CaseID)
 #' @export
 marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, wts = NULL, design = NULL) {
   
@@ -85,11 +77,6 @@ marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NU
 #' marginal means do not require a baseline, and are thus not sensitive to the choice of a baseline
 #' category. This was recommended by Leeper, Hobolt & Tilley (2020).
 #' 
-#' By default, the function uses \code{stats::lm} to estimate the model, and 
-#' \code{sandwich} to adjust standard errors if needed. However, you can also pass
-#' a surveydesign (\code{survey::svydesign}), in which case \code{survey::svyglm}
-#' will be used.
-#' 
 #' @param data A data frame containing the conjoint data
 #' @param formula A formula of the form `outcome ~ attr1 + attr2 + ...`
 #' @param outcome (Alternative to `formula`) Character string naming the outcome variable
@@ -97,15 +84,11 @@ marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NU
 #' @param id (Optional) A one-sided formula specifying the ID/cluster variable, e.g. `~id`
 #' @param group The respondent-level grouping variable (unquoted). Marginal
 #'   means are estimated separately for each level of this variable.
-#' @param vcov_type Type of variance-covariance estimation when clustering (HC0-HC3). Default is "HC1".
-#' @param wts (Optional) Weights to be used in the regression. Can be
-#'   \code{NULL} (the default), a numeric vector, or the name of a 
-#'   column in \code{data} (quoted or unquoted).
-#' @param design A \code{survey::svydesign}-object. If a \code{design} is 
-#'   provided, \code{cjlm} uses \code{survey::svyglm} as backend using 
-#'   the provided design, disregarding other arguments like \code{id},
-#'   \code{vcov_type}, and \code{wts}, as all of these are handled
-#'   by \code{survey::svyglm} (see \code{?survey::svyglm}).
+#' @param wts (Optional) Weights to be used in the regression, as a one-sided
+#'   formula (e.g. \code{~weights}).
+#' @param design A \code{survey::svydesign}-object. If a \code{design} is provided,
+#'   \code{id} and \code{weights} are ignored, and adjustments are made based
+#'   on the provided design instead.
 #'
 #' @return A data frame of class `marginal_means`
 #' 
@@ -114,7 +97,7 @@ marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NU
 #'   28(2), 207--221. \doi{10.1017/pan.2019.30}
 #'
 #' @examples
-#' marginal_means(data, selected ~ group + sex + age, id = ~id)
+#' data |> conditional_marginal_means(selected ~ sex + age, group = resp_age, id = ~id)
 #' @export
 conditional_marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, group = NULL, wts = NULL, design = NULL) {
   conditional_estimates(
