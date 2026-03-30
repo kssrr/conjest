@@ -1,6 +1,6 @@
 Package: conjest
 Title: Basic conjoint estimands.
-Version: 0.1
+Version: 0.2
 Authors@R: c(
     person("Lennart", "Kasserra", , "lennart.kasserra@uni-hamburg.de", role = c("aut", "cre")),
     person("Alina", "Greiner-Filsinger", , "alina.greiner@uni-mannheim.de", role = c("aut", "ctb")),
