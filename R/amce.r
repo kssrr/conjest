@@ -4,11 +4,6 @@
 #' cluster-robust standard errors. The reference level for each attribute is
 #' included is the first level of each variable. Note that attributes have to
 #' be factors.
-#' 
-#' By default, the function uses \code{stats::lm} to estimate the model, and 
-#' \code{sandwich} to adjust standard errors if needed. However, you can also pass
-#' a surveydesign (\code{survey::svydesign}), in which case \code{survey::svyglm}
-#' will be used.
 #'
 #' @param data A data frame containing the conjoint data.
 #' @param formula A formula of the form \code{outcome ~ attr1 + attr2 + ...}.
@@ -19,7 +14,6 @@
 #'   \code{formula} is provided.
 #' @param id (Optional) A one-sided formula specifying the clustering variable for
 #'   cluster-robust standard errors, e.g. \code{~id}.
-#' @param vcov_type Type of variance-covariance estimation when clustering (HC0-HC3). Default is "HC1".
 #' @param wts (Optional) Weights to be used in the regression. Can be
 #'   \code{NULL} (the default), a numeric vector, or the name of a 
 #'   column in \code{data} (quoted or unquoted).
@@ -40,29 +34,24 @@
 #' amce(data, outcome = "selected", attributes = c("group", "sex", "age"), id = ~uuid)
 #'
 #' @export
-amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, vcov_type = "HC1", wts = NULL, design = NULL) {
+amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, wts = NULL, design = NULL) {
   
   if (!is.null(formula)) {
-    outcome    <- deparse(rlang::f_lhs(formula))
+    outcome <- deparse(rlang::f_lhs(formula))
     attributes <- labels(terms(formula))
   }
   
-  # `wts` might be an unquoted name; evaluate it here:
-  parsed_wts <- parse_wts(data, wts, substitute(wts))
-  
-  # fit models separately (could be one model but this
-  # makes processing a bit more streamlined):
-   
-  results <- purrr::map(attributes, function(attr) {
+  results <- lapply(attributes, function(attr) {
       
-      tidy_mod <- cjlm(
+      mod <- cjlm(
         data,
-        formula   = reformulate(attr, response = outcome),
-        id        = id,
-        vcov_type = vcov_type,
-        wts       = parsed_wts,
-        design    = design
+        formula = reformulate(attr, response = outcome),
+        id = id,
+        wts = wts,
+        design = design
       )
+      
+      mod <- mod[mod$term != "(Intercept)", ]
       
       # the first factor level is the baseline & does not appear
       # in the model results; adding baselines back in (we esp.
@@ -79,20 +68,24 @@ amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = N
       )
       
       # put everything back together
+      out <- rbind(baseline_row, mod)
       
-      tidy_mod |>
-        dplyr::filter(term != "(Intercept)") |>
-        dplyr::add_row(baseline_row, .before = 1) |>
-        dplyr::mutate(attribute = attr, level = all_levels)
+      out$attribute <- attr
+      out$level <- all_levels
       
-    }) |>
-      dplyr::bind_rows() |>
-      dplyr::mutate(lower = estimate - std.error, upper = estimate + std.error) |>
-      dplyr::select(attribute, level, term, estimate, std.error, lower, upper, statistic, p.value)
-    
-    class(results) <- c("amce", class(results))
-    
-    results
+      out      
+      
+    }) |> do.call(rbind, args = _)
+  
+  results$upper <- results$estimate + results$std.error
+  results$lower <- results$estimate - results$std.error
+  
+  class(results) <- c("amce", class(results))
+  
+  results[, c(
+    "attribute", "level", "term", "estimate", "std.error", 
+    "lower", "upper", "statistic", "p.value"
+  )] |> tibble::tibble()
   
 }
 
@@ -158,50 +151,33 @@ amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = N
 #' )
 #'
 #' @export
-conditional_amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, group = NULL, vcov_type = "HC1", wts = NULL, design = NULL) {
+conditional_amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, group = NULL, wts = NULL, design = NULL) {
   
-  # might be an unquoted name, evaluate here:
-  parsed_wts <- parse_wts(data, wts, substitute(wts))
+  # build the design here bc we need to subset it before
+  # passing to `amce` which passes it to `cjlm`
   
-  result <- 
-    data |> 
-    dplyr::group_by({{ group }}) |> 
-    tidyr::nest() |> 
-    dplyr::mutate(
-      mms = lapply(data, function(d) {
+  full_design <- validate_design(data, design, id, wts)
+  
+  groupvar <- deparse(substitute(group))
+  groups <- unique(data[[groupvar]])
+  
+  result <- lapply(groups, function(g) {
+    
+    sub_design <- full_design[full_design$variables[[groupvar]] == g, ]
+    
+    sub_res <- amce(
+      data,
+      formula = formula,
+      outcome = outcome,
+      attributes = attributes,
+      design = sub_design
+    )
+    
+    sub_res[[groupvar]] <- g
+    
+    sub_res
         
-        # If a survey design was provided, subset it to match
-        # the current group's rows rather than passing the full design.
-        # Results might differ more strongly here depending on whether we call
-        # into the `survey`-package or use `lm` because `survey` does more
-        # adjustments & I think the design retains information about the whole
-        # clustering structure, while with `lm` we adjust in the subset only.
-        # Should look into this and think about it more at some point.
-        
-        # (this is currently producing wrong results and needs to be fixed)
-        
-        sub_design <- if (!is.null(design)) {
-          subset(design, rownames(design$variables) %in% rownames(d))
-        } else {
-          NULL
-        } 
-        
-        amce(
-          d,
-          formula    = formula,
-          outcome    = outcome,
-          attributes = attributes,
-          id         = id,
-          vcov_type  = vcov_type,
-          wts        = parsed_wts,
-          design     = sub_design
-        )
-        
-      })
-    ) |> 
-    dplyr::select({{ group }}, mms) |> 
-    tidyr::unnest(mms) |> 
-    dplyr::ungroup()
+  }) |> dplyr::bind_rows()
   
   class(result) <- c("conditional_amce", class(result))
   attr(result, "group") <- rlang::as_name(rlang::ensym(group))
