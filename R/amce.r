@@ -46,9 +46,9 @@ amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = N
       mod <- cjlm(
         data,
         formula = reformulate(attr, response = outcome),
-        id = id,
-        wts = wts,
-        design = design
+        id      = id,
+        wts     = wts,
+        design  = design
       )
       
       mod <- mod[mod$term != "(Intercept)", ]
@@ -71,7 +71,7 @@ amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = N
       out <- rbind(baseline_row, mod)
       
       out$attribute <- attr
-      out$level <- all_levels
+      out$level     <- all_levels
       
       out      
       
@@ -168,15 +168,13 @@ conditional_amce <- function(data, formula = NULL, outcome = NULL, attributes = 
 #' @export
 autoplot.amce <- function(df) {
   
+  df$sig <- make_stars(
+    df$p.value, 
+    thresholds = c(      .01,     .05,    .1   ), 
+    labels     = c("***",    "**",    "*",   "")
+  )
+  
   df |> 
-    dplyr::mutate(
-      sig = dplyr::case_when(
-        p.value < .01 ~ "***",
-        p.value < .05 ~ "**",
-        p.value < .1 ~ "*",
-        TRUE ~ ""
-      )
-    ) |> 
     ggplot2::ggplot(ggplot2::aes(x = estimate, y = level, color = attribute)) +
     ggplot2::geom_vline(xintercept = 0, lty = "dotted") +
     ggplot2::geom_point() +
@@ -230,21 +228,16 @@ summary.amce <- function(results, ...) {
     
     subset <- results[as.character(results$attribute) == attr & !is.na(results$p.value), ]
     
-    stars <- dplyr::case_when(
-      subset$p.value < 0.001 ~ " ***",
-      subset$p.value < 0.01  ~ " ** ",
-      subset$p.value < 0.05  ~ " *  ",
-      subset$p.value < 0.1   ~ " .  ",
-      TRUE                   ~ "    "
-    )
+    numeric_cols     <- c("estimate", "std.error", "statistic", "p.value")
+    subset[numeric_cols] <- lapply(subset[numeric_cols], format_number)
     
     out <- data.frame(
       ` `          = subset$level,
-      `Estimate`   = formatC(subset$estimate,  format = "f", digits = 4),
-      `Std. Error` = formatC(subset$std.error, format = "f", digits = 4),
-      `t value`    = formatC(subset$statistic, format = "f", digits = 3),
-      `Pr(>|t|)`   = formatC(subset$p.value,   format = "e", digits = 2),
-      ` `          = stars,
+      `Estimate`   = subset$estimate,
+      `Std. Error` = subset$std.error,
+      `t value`    = subset$statistic,
+      `Pr(>|t|)`   = subset$p.value,
+      ` `          = make_stars(subset$p.value),
       check.names  = FALSE
     )
     
@@ -288,21 +281,13 @@ summary.conditional_amce <- function(results, ...) {
       
       subset <- grp_subset[as.character(grp_subset$attribute) == attr & !is.na(grp_subset$p.value), ]
       
-      stars <- dplyr::case_when(
-        subset$p.value < 0.001 ~ " ***",
-        subset$p.value < 0.01  ~ " ** ",
-        subset$p.value < 0.05  ~ " *  ",
-        subset$p.value < 0.1   ~ " .  ",
-        TRUE                   ~ "    "
-      )
-      
       out <- data.frame(
         ` `          = subset$level,
         `Estimate`   = formatC(subset$estimate,  format = "f", digits = 4),
         `Std. Error` = formatC(subset$std.error, format = "f", digits = 4),
         `t value`    = formatC(subset$statistic, format = "f", digits = 3),
         `Pr(>|t|)`   = formatC(subset$p.value,   format = "e", digits = 2),
-        ` `          = stars,
+        ` `          = make_stars(df$p.value),
         check.names  = FALSE
       )
       

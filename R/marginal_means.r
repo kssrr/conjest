@@ -57,7 +57,7 @@ marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NU
     )
     
     mod$attribute <- attr
-    mod$level <- levels(data[[attr]])
+    mod$level     <- levels(data[[attr]])
     
     mod
     
@@ -131,12 +131,11 @@ conditional_marginal_means <- function(data, formula = NULL, outcome = NULL, att
 #' @export
 autoplot.marginal_means <- function(df) {
   
+  df$lower <- df$estimate - df$std.error
+  df$upper <- df$estimate + df$std.error
+  df$label <- paste0(stringr::str_to_title(df$attribute), ": ", df$level)
+  
   df |> 
-    dplyr::mutate(
-      lower = estimate - std.error,
-      upper = estimate + std.error,
-      label = paste0(stringr::str_to_title(attribute), ": ", level)
-    ) |> 
     ggplot2::ggplot(ggplot2::aes(x = estimate, y = label, color = attribute)) +
     ggplot2::geom_vline(xintercept = .5, lty = "dotted") +
     ggplot2::geom_point() +

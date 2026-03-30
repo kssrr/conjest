@@ -65,6 +65,29 @@ assert_fct <- function(data, attributes) {
   
 }
 
+# Get stars for significance levels for printouts. Can be called like
+# `p_values |> make_stars(c(.01 = "***", .05 = "**", .1 = "*"))`
+#
+#' @noRd
+make_stars <- function(p, thresholds = c(.001, .01, .05, .1), labels = c("***", "** ", "*", ".", "")) {
+  
+  if (!is.null(names(thresholds))) {
+    labels     <- c(thresholds, "   ")
+    thresholds <- as.numeric(names(thresholds))
+  }
+  
+  labels[findInterval(p, c(thresholds, 1)) + 1]
+  
+}
+
+format_number <- function(x, thres = 1e-4) {
+  ifelse(
+    abs(x) < thres,
+    formatC(x, format = "e", digits = 2),
+    formatC(x, format = "f", digits = 4)
+  )
+}
+
 # `cjlm` is basically the backend that fits the actual model and that `amce` & 
 # `marginal_means` call into. It just wraps `survey::svyglm` which is used here
 # to estimate a linear model adjusting for design features.
@@ -138,38 +161,21 @@ summary.cjlm <- function(df, ...) {
   
   # add stars for significance levels & format numbers
   
-  df <- 
-    df |> 
-    dplyr::mutate(
-      stars = dplyr::case_when(
-        p.value < .001 ~ "***",
-        p.value < .01 ~ "**",
-        p.value < .05 ~ "*",
-        p.value < .1 ~ ".",
-        TRUE ~ ""
-      ),
-      dplyr::across(estimate:p.value, function(x) {
-        
-        ifelse(
-          abs(x) < 1e-4,
-          formatC(x, format = "e", digits = 2),
-          formatC(x, format = "f", digits = 4)
-        )
-        
-      })
-    )
+  numeric_cols     <- c("estimate", "std.error", "statistic", "p.value")
+  df$stars         <- make_stars(df$p.value)
+  df[numeric_cols] <- lapply(df[numeric_cols], format_number)
   
   # Printing:
   
   cat("\nConjoint Analysis (Linear Model)\n\n")
   
   out <- data.frame(
-    ` ` = df$term,
-    `Estimate` = df$estimate,
+    ` `          = df$term,
+    `Estimate`   = df$estimate,
     `Std. Error` = df$std.error,
-    `t value` = df$statistic,
-    `Pr(>|t|)` = df$p.value,
-    ` ` = df$stars,
+    `t value`    = df$statistic,
+    `Pr(>|t|)`   = df$p.value,
+    ` `          = df$stars,
     check.names  = FALSE
   )
   
