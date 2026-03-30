@@ -65,11 +65,10 @@ assert_fct <- function(data, attributes) {
   
 }
 
-# Utility functions to fit generic model for conjoint analysis
+# `cjlm` is basically the backend that fits the actual model and that `amce` & 
+# `marginal_means` call into. It just wraps `survey::svyglm` which is used here
+# to estimate a linear model adjusting for design features.
 #
-# This is a pretty generic wrapper around `lm` and `lmtest`/`sandwich` to fit a 
-# linear model with clustered standard errors, and return a tidy data frame.
-
 #' Fit a Custom Linear Model for Conjoint Data
 #'
 #' A flexible low-level function for fitting arbitrary linear models to conjoint
@@ -117,12 +116,13 @@ assert_fct <- function(data, attributes) {
 #' print(res)
 #' ggplot2::autoplot(res)
 #'
+#'
 #' @export
-cjlm <- function(data, formula = NULL, id = NULL, vcov_type = "HC1", wts = NULL, design = NULL) {
+cjlm <- function(data, formula = NULL, id = NULL, wts = NULL, design = NULL) {
   
   design <- validate_design(data, design, id, wts)
 
-  model <- survey::svyglm(formula, design) 
+  model <- survey::svyglm(formula, design, family = gaussian())
   res <- broom::tidy(model)
   
   class(res) <- c("cjlm", class(res))
@@ -164,17 +164,50 @@ summary.cjlm <- function(df, ...) {
   cat("\nConjoint Analysis (Linear Model)\n\n")
   
   out <- data.frame(
-    ` `          = df$term,
-    `Estimate`   = df$estimate,
+    ` ` = df$term,
+    `Estimate` = df$estimate,
     `Std. Error` = df$std.error,
-    `t value`    = df$statistic,
-    `Pr(>|t|)`   = df$p.value,
-    ` `          = df$stars,
+    `t value` = df$statistic,
+    `Pr(>|t|)` = df$p.value,
+    ` ` = df$stars,
     check.names  = FALSE
   )
   
   print(out, row.names = FALSE)
   cat("\n")
   cat("Signif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\n")
+  
+}
+
+# Apply some estimator separately by groups. Used to implement subgroup analysis
+# via conditional AMCEs and conditional marginal means.
+#
+#' @noRd
+conditional_estimates <- function(data, formula, outcome, attributes, groupvar, wts, design, .estimator, .class) {
+  
+  full_design <- validate_design(data, design, id = NULL, wts = wts)
+  groups      <- unique(data[[groupvar]])
+  
+  result <- lapply(groups, function(g) {
+    
+    sub_design <- full_design[full_design$variables[[groupvar]] == g, ]
+    
+    sub_res <- .estimator(
+      data,
+      formula    = formula,
+      outcome    = outcome,
+      attributes = attributes,
+      design     = sub_design
+    )
+    
+    sub_res[[groupvar]] <- g
+    sub_res
+    
+  }) |> do.call(rbind, args = _)
+  
+  class(result) <- c(.class, class(result))
+  attr(result, "group") <- groupvar
+  
+  result
   
 }

@@ -116,39 +116,15 @@ marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NU
 #' @examples
 #' marginal_means(data, selected ~ group + sex + age, id = ~id)
 #' @export
-conditional_marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, group = NULL, vcov_type = "HC1", wts = NULL, design = NULL) {
-  
-  # build the design here bc we need to subset it before
-  # passing to `amce` which passes it to `cjlm`
-  
-  full_design <- validate_design(data, design, id, wts)
-  
-  groupvar <- deparse(substitute(group))
-  groups <- unique(data[[groupvar]])
-  
-  result <- lapply(groups, function(g) {
-    
-    sub_design <- full_design[full_design$variables[[groupvar]] == g, ]
-    
-    sub_res <- marginal_means(
-      data,
-      formula = formula,
-      outcome = outcome,
-      attributes = attributes,
-      design = sub_design
-    )
-    
-    sub_res[[groupvar]] <- g
-    
-    sub_res
-        
-  }) |> do.call(rbind, args = _)
-   
-  class(result) <- c("conditional_marginal_means", class(result))
-  attr(result, "group") <- rlang::as_name(rlang::ensym(group))
-  
-  result
-  
+conditional_marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, group = NULL, wts = NULL, design = NULL) {
+  conditional_estimates(
+    data, formula, outcome, attributes,
+    groupvar   = rlang::as_name(rlang::ensym(group)),
+    wts        = wts,
+    design     = design,
+    .estimator = marginal_means,
+    .class     = "conditional_marginal_means"
+  )
 }
 
 #' @importFrom ggplot2 autoplot
