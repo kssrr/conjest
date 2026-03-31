@@ -1,6 +1,7 @@
 ---
 title: "Introduction"
 output: rmarkdown::html_vignette
+bibliography: references.bib
 vignette: >
   %\VignetteIndexEntry{Introduction}
   %\VignetteEncoding{UTF-8}
@@ -12,7 +13,10 @@ editor_options:
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5,
+  out.width = "100%"
 )
 ```
 
@@ -23,7 +27,7 @@ library(ggplot2)
 data("trust")
 ```
 
-This vignette is meant to be a brief introduction to conjoint experiments, and to explain the basics of using the package. If you are familiar with how conjoint experiments work, you can skip ahead to \ref{sec:pkg}.
+This vignette is meant to be a brief introduction to conjoint experiments, and to explain the basics of using the package. If you are familiar with how conjoint experiments work, you can skip ahead [further below](#sec:pkg).
 
 # Background - Conjoint Experiments
 
@@ -32,7 +36,7 @@ Conjoint experiments present respondents with hypothetical profiles that vary si
 ![The Immigrant experiment: respondents have to choose which immigrant
 they would rather see admitted, depending on a number of randomized attributes.](immigrant_experiment.png){#fig:immig-ex}
 
-Figure \ref{fig:immig-ex} shows an example choice task from @hainmuelleretal2014, in which respondents were asked which of two immigrant profiles they would prefer to see admitted to the United States. Each profile is described by a number of different attributes, including country of origin, education, and gender, whose values are randomly assigned independently across profiles. A respondent who prefers Immigrant 2 in this task may be responding to the difference in job experience, education, country of origin, gender, or some combination of these; conjoints allow researchers to recover the average contribution of each attribute separately by aggregating over many such tasks.
+The [figure above](#fig:immig-ex) shows an example choice task from @hainmuelleretal2014, in which respondents were asked which of two immigrant profiles they would prefer to see admitted to the United States. Each profile is described by a number of different attributes, including country of origin, education, and gender, whose values are randomly assigned independently across profiles. A respondent who prefers Immigrant 2 in this task may be responding to the difference in job experience, education, country of origin, gender, or some combination of these; conjoints allow researchers to recover the average contribution of each attribute separately by aggregating over many such tasks.
 
 ## Average Marginal Component Effects
 
@@ -48,7 +52,7 @@ $$
 \mathcal{M}(a) = \mathbb{E}[Y(a, \mathbf{A}_{-k})]
 $$
 
-The AMCE is then a difference of marginal means: $\text{AMCE}(a') = \mathcal{M}(a') - \mathcal{M}(a_0)$. Because attribute values are randomized independently, each attribute is orthogonal to all others by design, which implies $A_k \indep \mathbf{A}_{-k}$ and therefore $\mathbb{E}[Y(a, \mathbf{A}_{-k})] = \mathbb{E}[Y(a)]$. This means that for any single attribute, the conjoint is equivalent to a standard randomized experiment in which that attribute alone is the treatment and all other attributes average out as background noise. In the binary case, where $A_k = 1$ if the profile has level $a'$ and $A_k = 0$ otherwise, this lets us restate the AMCE directly as an ATE:
+The AMCE is then a difference of marginal means: $\text{AMCE}(a') = \mathcal{M}(a') - \mathcal{M}(a_0)$. Because attribute values are randomized independently, each attribute is orthogonal to all others by design, which implies $A_k \perp \mathbf{A}_{-k}$ and therefore $\mathbb{E}[Y(a, \mathbf{A}_{-k})] = \mathbb{E}[Y(a)]$. This means that for any single attribute, the conjoint is equivalent to a standard randomized experiment in which that attribute alone is the treatment and all other attributes average out as background noise. In the binary case, where $A_k = 1$ if the profile has level $a'$ and $A_k = 0$ otherwise, this lets us restate the AMCE directly as an ATE:
 
 $$
 \mathbb{E}[Y(a', \mathbf{A}_{-k}) - Y(a_0, \mathbf{A}_{-k})] = \mathbb{E}[Y(1) - Y(0)]
@@ -64,7 +68,7 @@ $$
 \mathbb{E}[Y(a',b')] - \mathbb{E}[Y(a_0, b')] - \mathbb{E}[Y(a', b_0)] + \mathbb{E}[Y(a_0, b_0)]
 $$
 
-which is an equivalent of the AIE as shown in eq. \ref{eq:aie}. Identification of this quantity is warranted by the design, as all attribute values are fully randomized: since the separate effects are identified, so are the joint effects. For example, in the immigrant experiment, we might ask something like: how does the effect of a certain origin on hypothetical admission change depending on whether the profile is male or female? Note that this interaction between attributes is always symmetrical.
+which is an equivalent of the average interaction effect (AIE) [@egamiimai2018]. Identification of this quantity is warranted by the design, as all attribute values are fully randomized: since the separate effects are identified, so are the joint effects. For example, in the immigrant experiment, we might ask something like: how does the effect of a certain origin on hypothetical admission change depending on whether the profile is male or female? Note that this interaction between attributes is always symmetrical.
 
 The second kind of effect dependency of interest is what @leeperetal2020 call "subgroup analysis": whether the effect of an attribute differs according to some respondent attribute $S$. We can estimate conditional AMCEs
 
@@ -85,9 +89,7 @@ $$
 
 # The package {#sec:pkg}
 
-> Here: explain idea
-
-Your conjoint data is expected to be in a format where every row is a profile (long), not a choice task (wide).
+The package provides functions and tools to estimate, inspect & visualize common quantities from conjoint experiments used in social science research. Your conjoint data is expected to be in a format where every row is a profile (long), not a choice task (wide).
 
 As an example, let's compute AMCEs. To calculate AMCEs for each level of some attribute(s) in a conjoint experiment, use the `amce()`-function:
 
@@ -194,4 +196,6 @@ cjlm(trust, selected ~ group + sex, id = ~uuid)
 cjlm(trust, selected ~ 0 + sex, id = ~uuid)
 ```
 
-But generally, using `amce()` or `marginal_means()` is preferrable due to their convenient summary & visualization methods.
+But generally, using `amce()` or `marginal_means()` is preferable due to their convenient summary & visualization methods.
+
+# References
