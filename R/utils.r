@@ -129,20 +129,24 @@ format_number <- function(x, thres = 1e-4) {
 #'   \code{\link{conditional_amce}}, \code{\link{conditional_marginal_means}}
 #'
 #' @examples
-#' # Custom interaction model not covered by amce()
 #' library(conjest)
-#' data("immigration")
+#' data("trust")
 #' 
-#' cjlm(immigration, ChosenImmigrant ~ Education * Gender, id = ~CaseID)
+#' # For example, fit a model with
+#' # interaction terms:
 #' 
-#' # The actual model can also be retrieved from the result:
-#' 
-#' res <- immigration |> cjlm(ChosenImmigrant ~ Education * Gender, id = ~CaseID)
-#' res |> attr("model")
-#' 
-#' # Custom methods:
+#' res <- cjlm(trust, selected ~ group * sex, id = ~uuid)
 #' summary(res)
-#' print(res)
+#' 
+#' # The actual model object is also stored
+#' # for further scrutiny
+#' attr(res, "model")
+#' 
+#' # `cjlm` can also be used to emulate AMCEs...
+#' cjlm(trust, selected ~ group + sex, id = ~uuid)
+#' 
+#' # ...and marginal means (for one attribute)
+#' cjlm(trust, selected ~ 0 + sex, id = ~uuid)
 #'
 #' @export
 cjlm <- function(data, formula = NULL, id = NULL, wts = NULL, design = NULL) {

@@ -29,9 +29,26 @@
 #'
 #' @examples
 #' library(conjest)
-#' data("immigration")
-#'
-#' immigration |> marginal_means(ChosenImmigrant ~ Gender + Education, id = ~CaseID)
+#' data("trust")
+#' 
+#' res <- marginal_means(trust, selected ~ group + sex + age, id = ~uuid)
+#' 
+#' # Custom methods for inspecting & visualizing results:
+#' summary(res)
+#' ggplot2::autoplot(res)
+#' 
+#' # Support for designs via the `survey`-package:
+#' 
+#' library(survey)
+#' 
+#' cj_design <- svydesign(id = ~uuid, weights = ~weight, data = trust)
+#' 
+#' marginal_means(
+#'   trust, 
+#'   selected ~ group + sex + age, 
+#'   design = cj_design
+#' )
+#' 
 #' @export
 marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, wts = NULL, design = NULL) {
   
@@ -103,14 +120,40 @@ marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NU
 #'   28(2), 207--221. \doi{10.1017/pan.2019.30}
 #'
 #' @examples
-#' \dontrun{
-#'   conditional_marginal_means(
-#'     data,
-#'     selected ~ sex + age, 
-#'     group = resp_age, 
-#'     id = ~id
-#'    )
-#' }
+#' library(conjest)
+#' data("trust")
+#' 
+#' # MMs by subgroups defined according to 
+#' # respondent characteristics, e.g. 
+#' # trust in men vs. women, by sex of
+#' # the respondent:
+#' res <- conditional_marginal_means(
+#'   trust,
+#'   selected ~ sex,
+#'   group = resp_sex,
+#'   id = ~uuid
+#' )
+#' 
+#' # MMs are estimated separately for each
+#' # value in `group`:
+#' summary(res)
+#' ggplot2::autoplot(res)
+#' 
+#' # Can also be used to investigate how
+#' # the effect of one attribute varies
+#' # across values of another.
+#' #
+#' # For example: how does trust in in- vs.
+#' # outgroup profiles vary depending on the
+#' # sex of the profile?
+#' 
+#' conditional_marginal_means(
+#'   trust,
+#'   selected ~ group,
+#'   group = sex,
+#'   id = ~uuid
+#' )
+#' 
 #' @export
 conditional_marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, group = NULL, wts = NULL, design = NULL) {
   conditional_estimates(

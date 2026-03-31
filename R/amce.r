@@ -38,9 +38,29 @@
 #'
 #' @examples
 #' library(conjest)
-#' data("immigration")
+#' data("trust")
 #' 
-#' immigration |> amce(ChosenImmigrant ~ Education + Gender, id = ~CaseID)
+#' amce_res <- amce(trust, selected ~ age + group + sex, id = ~uuid)
+#' 
+#' # Custom methods for checking & visualizing results are available:
+#' summary(amce_res)
+#' ggplot2::autoplot(amce_res)
+#' 
+#' # weights are also supported:
+#' amce(
+#'   trust, 
+#'   selected ~ age + group + sex, 
+#'   id = ~uuid,
+#'   wts = ~weight
+#' )
+#' 
+#' # Support for designs via `survey`-package:
+#' 
+#' library(survey)
+#' 
+#' cj_design <- svydesign(id = ~uuid, weights = ~weight, data = trust)
+#' 
+#' amce(trust, selected ~ age + group + sex, design = cj_design)
 #'
 #' @export
 amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, wts = NULL, design = NULL) {
@@ -140,14 +160,26 @@ amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = N
 #' @seealso \code{\link{amce}}, \code{\link{conditional_marginal_means}}
 #'
 #' @examples
-#' \dontrun{
-#'   conditional_amce(
-#'     data,
-#'     selected ~ group + sex + age,
-#'     id    = ~uuid,
-#'     group = resp_sex
-#'   )
-#' }
+#' library(conjest)
+#' data("trust")
+#' 
+#' # AMCEs by subgroups defined according to 
+#' # respondent characteristics, e.g. 
+#' # trust in men vs. women, by sex of
+#' # the respondent:
+#' 
+#' res <- conditional_amce(
+#'   trust, 
+#'   selected ~ sex, 
+#'   group = resp_sex, 
+#'   id = ~uuid
+#' )
+#' 
+#' # AMCEs are estimated separately for 
+#' # different values of `group`:
+#' 
+#' summary(res)
+#' ggplot2::autoplot(res)
 #'
 #' @export
 conditional_amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, group = NULL, wts = NULL, design = NULL) {
