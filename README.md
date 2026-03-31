@@ -64,14 +64,14 @@ library(ggplot2)
   autoplot()
 ```
 <div align="center">
-    <img src="https://github.com/user-attachments/assets/e9cc00ec-2790-42d3-8809-bb38bf15c5da" width="60%">
+    <img src="https://github.com/user-attachments/assets/e9cc00ec-2790-42d3-8809-bb38bf15c5da" width="75%">
 </div>
 
 ```r
 autoplot(amce_res)
 ```
 <div align="center">
-    <img src="https://github.com/user-attachments/assets/e3bd2861-97ba-42b6-a3da-0dc28b389108" width="60%">
+    <img src="https://github.com/user-attachments/assets/e3bd2861-97ba-42b6-a3da-0dc28b389108" width="75%">
 </div>
 
 Everything returns tidy data frames that are easy to work with if you want to make your own visualizations, or present results differently:
