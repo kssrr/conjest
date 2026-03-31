@@ -1,5 +1,9 @@
 # conjest
 
+<!-- badges: start -->
+  [![R-CMD-check](https://github.com/kssrr/conjest/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/kssrr/conjest/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
+
 Provides tools for estimating and visualizing common estimands from conjoint survey experiments, including average marginal component effects (AMCEs) and marginal means (MMs), with support for cluster-robust standard errors and subgroup analyses. Conjoint experiments present respondents with hypothetical profiles that vary simultaneously across multiple attributes, asking them to choose between or rate these profiles. By randomly assigning attribute values across profiles, conjoint designs exploit the logic of randomization to identify the causal effect of each attribute on choices or ratings. This makes them particularly well-suited to studying social judgments and decision-making, where multiple characteristics of a target person or object are likely to jointly influence behavior.
 
 This package implements the methods described in [Hainmueller, Hopkins, and Yamamoto (2014)](https://doi.org/10.1093/pan/mpt024) and [Leeper, Hobolt, and Tilley (2020)](https://doi.org/10.1017/pan.2019.30), allowing you to estimate & visualize:
