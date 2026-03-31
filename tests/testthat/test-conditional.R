@@ -7,7 +7,7 @@ test_that("conditional_amce returns correct class", {
 
 test_that("conditional_amce group attribute is set correctly", {
   result <- conditional_amce(trust, selected ~ education, id = ~uuid, group = resp_sex)
-  expect_equal(attr(result, "group"), "Gender")
+  expect_equal(attr(result, "group"), "resp_sex")
 })
 
 test_that("conditional_amce has one set of results per group level", {
