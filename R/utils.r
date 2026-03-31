@@ -143,7 +143,6 @@ format_number <- function(x, thres = 1e-4) {
 #' # Custom methods:
 #' summary(res)
 #' print(res)
-#' ggplot2::autoplot(res)
 #'
 #' @export
 cjlm <- function(data, formula = NULL, id = NULL, wts = NULL, design = NULL) {
