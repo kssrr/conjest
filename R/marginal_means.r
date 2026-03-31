@@ -103,6 +103,7 @@ conditional_marginal_means <- function(data, formula = NULL, outcome = NULL, att
   conditional_estimates(
     data, formula, outcome, attributes,
     groupvar   = rlang::as_name(rlang::ensym(group)),
+    id         = id,
     wts        = wts,
     design     = design,
     .estimator = marginal_means,
@@ -114,8 +115,6 @@ conditional_marginal_means <- function(data, formula = NULL, outcome = NULL, att
 #' @export
 autoplot.marginal_means <- function(df) {
   
-  df$lower <- df$estimate - df$std.error
-  df$upper <- df$estimate + df$std.error
   df$label <- paste0(stringr::str_to_title(df$attribute), ": ", df$level)
   
   df |> 

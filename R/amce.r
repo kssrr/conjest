@@ -48,6 +48,8 @@ amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = N
     outcome <- deparse(rlang::f_lhs(formula))
     attributes <- labels(terms(formula))
   }
+
+  assert_fct(data, attributes)
   
   results <- lapply(attributes, function(attr) {
       
@@ -154,6 +156,7 @@ conditional_amce <- function(data, formula = NULL, outcome = NULL, attributes = 
   conditional_estimates(
     data, formula, outcome, attributes,
     groupvar   = rlang::as_name(rlang::ensym(group)),
+    id         = id,
     wts        = wts,
     design     = design,
     .estimator = amce,
@@ -224,6 +227,7 @@ summary.amce <- function(results, ...) {
     cat(strrep("-", 60), "\n")
     
     subset <- results[as.character(results$attribute) == attr & !is.na(results$p.value), ]
+    subset$stars <- make_stars(subset$p.value)
     
     numeric_cols     <- c("estimate", "std.error", "statistic", "p.value")
     subset[numeric_cols] <- lapply(subset[numeric_cols], format_number)
@@ -234,7 +238,7 @@ summary.amce <- function(results, ...) {
       `Std. Error` = subset$std.error,
       `t value`    = subset$statistic,
       `Pr(>|t|)`   = subset$p.value,
-      ` `          = make_stars(subset$p.value),
+      ` `          = subset$stars,
       check.names  = FALSE
     )
     
@@ -284,7 +288,7 @@ summary.conditional_amce <- function(results, ...) {
         `Std. Error` = formatC(subset$std.error, format = "f", digits = 4),
         `t value`    = formatC(subset$statistic, format = "f", digits = 3),
         `Pr(>|t|)`   = formatC(subset$p.value,   format = "e", digits = 2),
-        ` `          = make_stars(df$p.value),
+        ` `          = make_stars(subset$p.value),
         check.names  = FALSE
       )
       

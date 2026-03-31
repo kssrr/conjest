@@ -193,9 +193,9 @@ summary.cjlm <- function(df, ...) {
 # via conditional AMCEs and conditional marginal means.
 #
 #' @noRd
-conditional_estimates <- function(data, formula, outcome, attributes, groupvar, wts, design, .estimator, .class) {
+conditional_estimates <- function(data, formula, outcome, attributes, groupvar, id, wts, design, .estimator, .class) {
   
-  full_design <- validate_design(data, design, id = NULL, wts = wts)
+  full_design <- validate_design(data, design, id = id, wts = wts)
   groups      <- unique(data[[groupvar]])
   
   result <- lapply(groups, function(g) {
