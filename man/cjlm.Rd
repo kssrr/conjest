@@ -39,6 +39,7 @@ that the user can process and plot as needed.
 }
 \examples{
 # Custom interaction model not covered by amce()
+library(conjest)
 data("immigration")
 
 cjlm(immigration, ChosenImmigrant ~ Education * Gender, id = ~CaseID)
@@ -51,7 +52,6 @@ res |> attr("model")
 # Custom methods:
 summary(res)
 print(res)
-ggplot2::autoplot(res)
 
 }
 \seealso{

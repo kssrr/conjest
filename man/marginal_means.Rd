@@ -47,6 +47,11 @@ increases the probability of selection relative to the average profile, and
 values below 0.5 indicate the opposite.
 }
 \examples{
+library(conjest)
 data("immigration")
+
 immigration |> marginal_means(ChosenImmigrant ~ Gender + Education, id = ~CaseID)
+}
+\seealso{
+\code{\link{amce}}, \code{\link{conditional_marginal_means}}
 }

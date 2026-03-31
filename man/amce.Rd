@@ -52,6 +52,7 @@ AMCEs are defined relative to the chosen reference category, and are thus
 sensitive to the choice of reference category.
 }
 \examples{
+library(conjest)
 data("immigration")
 
 immigration |> amce(ChosenImmigrant ~ Education + Gender, id = ~CaseID)
@@ -64,5 +65,5 @@ Preference Experiments. \emph{Political Analysis}, 22(1), 1--30.
 \doi{10.1093/pan/mpt024}
 }
 \seealso{
-\code{\link{autoplot.amce}}, \code{\link{marginal_means}}
+\code{\link{conditional_amce}}, \code{\link{marginal_means}}
 }

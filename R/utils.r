@@ -130,6 +130,7 @@ format_number <- function(x, thres = 1e-4) {
 #'
 #' @examples
 #' # Custom interaction model not covered by amce()
+#' library(conjest)
 #' data("immigration")
 #' 
 #' cjlm(immigration, ChosenImmigrant ~ Education * Gender, id = ~CaseID)
@@ -142,7 +143,6 @@ format_number <- function(x, thres = 1e-4) {
 #' # Custom methods:
 #' summary(res)
 #' print(res)
-#' ggplot2::autoplot(res)
 #'
 #' @export
 cjlm <- function(data, formula = NULL, id = NULL, wts = NULL, design = NULL) {
@@ -161,25 +161,25 @@ cjlm <- function(data, formula = NULL, id = NULL, wts = NULL, design = NULL) {
 }
 
 #' @export
-summary.cjlm <- function(df, ...) {
+summary.cjlm <- function(object, ...) {
   
   # add stars for significance levels & format numbers
   
   numeric_cols     <- c("estimate", "std.error", "statistic", "p.value")
-  df$stars         <- make_stars(df$p.value)
-  df[numeric_cols] <- lapply(df[numeric_cols], format_number)
+  object$stars         <- make_stars(object$p.value)
+  object[numeric_cols] <- lapply(object[numeric_cols], format_number)
   
   # Printing:
   
   cat("\nConjoint Analysis (Linear Model)\n\n")
   
   out <- data.frame(
-    ` `          = df$term,
-    `Estimate`   = df$estimate,
-    `Std. Error` = df$std.error,
-    `t value`    = df$statistic,
-    `Pr(>|t|)`   = df$p.value,
-    ` `          = df$stars,
+    ` `          = object$term,
+    `Estimate`   = object$estimate,
+    `Std. Error` = object$std.error,
+    `t value`    = object$statistic,
+    `Pr(>|t|)`   = object$p.value,
+    ` `          = object$stars,
     check.names  = FALSE
   )
   
