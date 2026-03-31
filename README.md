@@ -11,12 +11,14 @@ This package implements the methods described in [Hainmueller, Hopkins, and Yama
 
 * Average Marginal Component Effects (AMCEs), via `amce()`.
 * Marginal Means, via `marginal_means()`.
-* Conditional Marginal Means, for subgroup analysis, via `conditional_marginal_means()`.
-* *Planned:* Average Component Interaction Effects (ACIEs).
+* Conditional versions of both, via `conditional_amce()` and `conditional_marginal_means()`.
+* Arbitrary models with design-specific adjustments, via `cjlm()`.
+
+Custom S3 methods for summarizing and visualizing results are included for `summary()` and `ggplot2::autoplot()`.
 
 ## Installation
 
-The package is not (yet) on CRAN, but you can install it directly from GitHub:
+The package is not (yet) on CRAN, but you can install it directly from GitHub for now:
 
 ```r
 devtools::install_github("kssrr/conjest")
