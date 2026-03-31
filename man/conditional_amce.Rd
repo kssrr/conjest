@@ -58,6 +58,7 @@ absolute levels of favorability across subgroups, use
 \code{\link{conditional_marginal_means}} instead.
 }
 \examples{
+## Not run:
 conditional_amce(
   data,
   selected ~ group + sex + age,
@@ -72,7 +73,5 @@ Subgroup Preferences in Conjoint Experiments. \emph{Political Analysis},
 28(2), 207--221. \doi{10.1017/pan.2019.30}
 }
 \seealso{
-\code{\link{amce}}, \code{\link{conditional_marginal_means}},
-\code{\link{autoplot.conditional_amce}},
-\code{\link{summary.conditional_amce}}
+\code{\link{amce}}, \code{\link{conditional_marginal_means}}
 }

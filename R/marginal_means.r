@@ -25,8 +25,12 @@
 #'
 #' @return A data frame of class `marginal_means`
 #'
+#' @seealso \code{\link{amce}}, \code{\link{conditional_marginal_means}}
+#'
 #' @examples
+#' library(conjest)
 #' data("immigration")
+#'
 #' immigration |> marginal_means(ChosenImmigrant ~ Gender + Education, id = ~CaseID)
 #' @export
 marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, wts = NULL, design = NULL) {
@@ -91,12 +95,15 @@ marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NU
 #'   on the provided design instead.
 #'
 #' @return A data frame of class `marginal_means`
+#'
+#' @seealso \code{\link{marginal_means}}, \code{\link{conditional_amce}}
 #' 
 #' @references Leeper, T. J., Hobolt, S. B., and Tilley, J. (2020). Measuring
 #'   Subgroup Preferences in Conjoint Experiments. \emph{Political Analysis},
 #'   28(2), 207--221. \doi{10.1017/pan.2019.30}
 #'
 #' @examples
+#' ## Not run:
 #' data |> conditional_marginal_means(selected ~ sex + age, group = resp_age, id = ~id)
 #' @export
 conditional_marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, group = NULL, wts = NULL, design = NULL) {
@@ -113,11 +120,11 @@ conditional_marginal_means <- function(data, formula = NULL, outcome = NULL, att
 
 #' @importFrom ggplot2 autoplot
 #' @export
-autoplot.marginal_means <- function(df) {
+autoplot.marginal_means <- function(object, ...) {
   
-  df$label <- paste0(stringr::str_to_title(df$attribute), ": ", df$level)
+  object$label <- paste0(object$attribute, ": ", object$level)
   
-  df |> 
+  object |> 
     ggplot2::ggplot(ggplot2::aes(x = estimate, y = label, color = attribute)) +
     ggplot2::geom_vline(xintercept = .5, lty = "dotted") +
     ggplot2::geom_point() +
@@ -129,11 +136,11 @@ autoplot.marginal_means <- function(df) {
 
 #' @importFrom ggplot2 autoplot
 #' @export
-autoplot.conditional_marginal_means <- function(data, ...) {
+autoplot.conditional_marginal_means <- function(object, ...) {
   
-  group <- attr(data, "group")
+  group <- attr(object, "group")
   
-  data |> 
+  object |> 
     ggplot2::ggplot(ggplot2::aes(x = estimate, y = level, color = .data[[group]])) +
     ggplot2::geom_vline(xintercept = .5, lty = "dotted") +
     ggplot2::geom_point(position = ggplot2::position_dodge(width = .4)) +
@@ -147,9 +154,9 @@ autoplot.conditional_marginal_means <- function(data, ...) {
 }
 
 #' @export
-summary.marginal_means <- function(data, ...) {
+summary.marginal_means <- function(object, ...) {
   
-  attrs <- unique(data$attribute)
+  attrs <- unique(object$attribute)
   
   cat("Marginal Means\n")
   cat(strrep("=", 60), "\n\n")
@@ -159,7 +166,7 @@ summary.marginal_means <- function(data, ...) {
     cat("Attribute:", attr, "\n")
     cat(strrep("-", 60), "\n")
     
-    subset <- data[data$attribute == attr, ]
+    subset <- object[object$attribute == attr, ]
     
     out <- data.frame(
       ` `          = subset$level,
@@ -176,10 +183,10 @@ summary.marginal_means <- function(data, ...) {
 }
 
 #' @export
-summary.conditional_marginal_means <- function(data, ...) {
+summary.conditional_marginal_means <- function(object, ...) {
   
-  group_var <- attr(data, "group")
-  attrs     <- unique(data$attribute)
+  group_var <- attr(object, "group")
+  attrs     <- unique(object$attribute)
   
   cat("Conditional Marginal Means\n")
   cat(strrep("=", 60), "\n\n")
@@ -189,7 +196,7 @@ summary.conditional_marginal_means <- function(data, ...) {
     cat("Attribute:", attr, "\n")
     cat(strrep("-", 60), "\n")
     
-    attr_data <- data[as.character(data$attribute) == attr, ]
+    attr_data <- object[as.character(object$attribute) == attr, ]
     levels    <- unique(attr_data$level)
     
     purrr::walk(levels, function(lvl) {
