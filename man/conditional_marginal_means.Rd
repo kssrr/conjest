@@ -47,14 +47,40 @@ marginal means do not require a baseline, and are thus not sensitive to the choi
 category. This was recommended by Leeper, Hobolt & Tilley (2020).
 }
 \examples{
-\dontrun{
-  conditional_marginal_means(
-    data,
-    selected ~ sex + age, 
-    group = resp_age, 
-    id = ~id
-   )
-}
+library(conjest)
+data("trust")
+
+# MMs by subgroups defined according to 
+# respondent characteristics, e.g. 
+# trust in men vs. women, by sex of
+# the respondent:
+res <- conditional_marginal_means(
+  trust,
+  selected ~ sex,
+  group = resp_sex,
+  id = ~uuid
+)
+
+# MMs are estimated separately for each
+# value in `group`:
+summary(res)
+ggplot2::autoplot(res)
+
+# Can also be used to investigate how
+# the effect of one attribute varies
+# across values of another.
+#
+# For example: how does trust in in- vs.
+# outgroup profiles vary depending on the
+# sex of the profile?
+
+conditional_marginal_means(
+  trust,
+  selected ~ group,
+  group = sex,
+  id = ~uuid
+)
+
 }
 \references{
 Leeper, T. J., Hobolt, S. B., and Tilley, J. (2020). Measuring

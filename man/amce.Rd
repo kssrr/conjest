@@ -53,9 +53,29 @@ sensitive to the choice of reference category.
 }
 \examples{
 library(conjest)
-data("immigration")
+data("trust")
 
-immigration |> amce(ChosenImmigrant ~ Education + Gender, id = ~CaseID)
+amce_res <- amce(trust, selected ~ age + group + sex, id = ~uuid)
+
+# Custom methods for checking & visualizing results are available:
+summary(amce_res)
+ggplot2::autoplot(amce_res)
+
+# weights are also supported:
+amce(
+  trust, 
+  selected ~ age + group + sex, 
+  id = ~uuid,
+  wts = ~weight
+)
+
+# Support for designs via `survey`-package:
+
+library(survey)
+
+cj_design <- svydesign(id = ~uuid, weights = ~weight, data = trust)
+
+amce(trust, selected ~ age + group + sex, design = cj_design)
 
 }
 \references{

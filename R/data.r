@@ -55,3 +55,4 @@
 #'  \item{stratum}{Sampling stratum}
 #'  \item{weight}{Design weight}
 #' }
+"trust"

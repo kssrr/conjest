@@ -55,14 +55,26 @@ absolute levels of favorability across subgroups, use
 \code{\link{conditional_marginal_means}} instead.
 }
 \examples{
-\dontrun{
-  conditional_amce(
-    data,
-    selected ~ group + sex + age,
-    id    = ~uuid,
-    group = resp_sex
-  )
-}
+library(conjest)
+data("trust")
+
+# AMCEs by subgroups defined according to 
+# respondent characteristics, e.g. 
+# trust in men vs. women, by sex of
+# the respondent:
+
+res <- conditional_amce(
+  trust, 
+  selected ~ sex, 
+  group = resp_sex, 
+  id = ~uuid
+)
+
+# AMCEs are estimated separately for 
+# different values of `group`:
+
+summary(res)
+ggplot2::autoplot(res)
 
 }
 \references{

@@ -48,9 +48,26 @@ values below 0.5 indicate the opposite.
 }
 \examples{
 library(conjest)
-data("immigration")
+data("trust")
 
-immigration |> marginal_means(ChosenImmigrant ~ Gender + Education, id = ~CaseID)
+res <- marginal_means(trust, selected ~ group + sex + age, id = ~uuid)
+
+# Custom methods for inspecting & visualizing results:
+summary(res)
+ggplot2::autoplot(res)
+
+# Support for designs via the `survey`-package:
+
+library(survey)
+
+cj_design <- svydesign(id = ~uuid, weights = ~weight, data = trust)
+
+marginal_means(
+  trust, 
+  selected ~ group + sex + age, 
+  design = cj_design
+)
+
 }
 \seealso{
 \code{\link{amce}}, \code{\link{conditional_marginal_means}}
