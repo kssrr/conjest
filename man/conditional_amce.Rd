@@ -42,10 +42,7 @@ based on the provided design instead.}
 }
 \value{
 A data frame of class \code{conditional_amce} with the same columns
-as \code{\link{amce}}, plus a column for the grouping variable. The name
-of the grouping variable is stored as an attribute on the result and used
-by \code{\link{autoplot.conditional_amce}} and
-\code{\link{summary.conditional_amce}}.
+as \code{\link{amce}}, plus a column for the grouping variable.
 }
 \description{
 Computes AMCEs separately for each level of a respondent-level grouping
@@ -58,13 +55,14 @@ absolute levels of favorability across subgroups, use
 \code{\link{conditional_marginal_means}} instead.
 }
 \examples{
-## Not run:
-conditional_amce(
-  data,
-  selected ~ group + sex + age,
-  id    = ~uuid,
-  group = resp_sex
-)
+\dontrun{
+  conditional_amce(
+    data,
+    selected ~ group + sex + age,
+    id    = ~uuid,
+    group = resp_sex
+  )
+}
 
 }
 \references{

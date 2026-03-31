@@ -47,8 +47,14 @@ marginal means do not require a baseline, and are thus not sensitive to the choi
 category. This was recommended by Leeper, Hobolt & Tilley (2020).
 }
 \examples{
-## Not run:
-data |> conditional_marginal_means(selected ~ sex + age, group = resp_age, id = ~id)
+\dontrun{
+  conditional_marginal_means(
+    data,
+    selected ~ sex + age, 
+    group = resp_age, 
+    id = ~id
+   )
+}
 }
 \references{
 Leeper, T. J., Hobolt, S. B., and Tilley, J. (2020). Measuring

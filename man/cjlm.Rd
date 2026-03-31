@@ -52,7 +52,6 @@ res |> attr("model")
 # Custom methods:
 summary(res)
 print(res)
-ggplot2::autoplot(res)
 
 }
 \seealso{

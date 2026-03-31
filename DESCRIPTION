@@ -12,7 +12,7 @@ Description: Provides tools for estimating and visualizing common estimands
     methods described in Hainmueller, Hopkins, and Yamamoto (2014)
     <doi:10.1093/pan/mpt024> and Leeper, Hobolt, and Tilley (2020)
     <doi:10.1017/pan.2019.30>.
-License: usethis::use_mit_license()
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2

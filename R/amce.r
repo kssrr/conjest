@@ -131,10 +131,7 @@ amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = N
 #'   based on the provided design instead.
 #'
 #' @return A data frame of class \code{conditional_amce} with the same columns
-#'   as \code{\link{amce}}, plus a column for the grouping variable. The name
-#'   of the grouping variable is stored as an attribute on the result and used
-#'   by \code{\link{autoplot.conditional_amce}} and
-#'   \code{\link{summary.conditional_amce}}.
+#'   as \code{\link{amce}}, plus a column for the grouping variable.
 #'
 #' @references Leeper, T. J., Hobolt, S. B., and Tilley, J. (2020). Measuring
 #'   Subgroup Preferences in Conjoint Experiments. \emph{Political Analysis},
@@ -143,13 +140,14 @@ amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = N
 #' @seealso \code{\link{amce}}, \code{\link{conditional_marginal_means}}
 #'
 #' @examples
-#' ## Not run:
-#' conditional_amce(
-#'   data,
-#'   selected ~ group + sex + age,
-#'   id    = ~uuid,
-#'   group = resp_sex
-#' )
+#' \dontrun{
+#'   conditional_amce(
+#'     data,
+#'     selected ~ group + sex + age,
+#'     id    = ~uuid,
+#'     group = resp_sex
+#'   )
+#' }
 #'
 #' @export
 conditional_amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, group = NULL, wts = NULL, design = NULL) {
@@ -164,7 +162,6 @@ conditional_amce <- function(data, formula = NULL, outcome = NULL, attributes = 
   )
 }
 
-#' @importFrom ggplot2 autoplot
 #' @export
 autoplot.amce <- function(object, ...) {
   
@@ -193,7 +190,6 @@ autoplot.amce <- function(object, ...) {
   
 }
 
-#' @importFrom ggplot2 autoplot
 #' @export
 autoplot.conditional_amce <- function(object, ...) {
   
@@ -220,7 +216,7 @@ summary.amce <- function(object, ...) {
   cat("Average Marginal Component Effects\n")
   cat(strrep("=", 60), "\n\n")
   
-  purrr::walk(attrs, function(attr) {
+  for (attr in attrs) {
     
     cat("Attribute:", attr, "\n")
     cat("Reference level:", object$level[as.character(object$attribute) == attr][1], "\n")
@@ -245,7 +241,7 @@ summary.amce <- function(object, ...) {
     print(out, row.names = FALSE)
     cat("\n")
     
-  })
+  }
   
   cat("\nSignif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n")
   
@@ -265,7 +261,7 @@ summary.conditional_amce <- function(object, ...) {
   cat("Conditional Average Marginal Component Effects\n")
   cat(strrep("=", 60), "\n\n")
   
-  purrr::walk(groups, function(grp) {
+  for (grp in groups) {
     
     cat(strrep("=", 60), "\n")
     cat(group_var, ":", as.character(grp), "\n")
@@ -274,7 +270,7 @@ summary.conditional_amce <- function(object, ...) {
     grp_subset <- object[as.character(object[[group_var]]) == as.character(grp), ]
     attrs      <- unique(grp_subset$attribute)
     
-    purrr::walk(attrs, function(attr) {
+    for (attr in attrs) {
       
       cat("Attribute:", attr, "\n")
       cat("Reference level:", grp_subset$level[as.character(grp_subset$attribute) == attr][1], "\n")
@@ -295,9 +291,9 @@ summary.conditional_amce <- function(object, ...) {
       print(out, row.names = FALSE)
       cat("\n")
       
-    })
+    }
     
-  })
+  }
   
   cat("\nSignif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n")
   

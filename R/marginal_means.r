@@ -103,8 +103,14 @@ marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NU
 #'   28(2), 207--221. \doi{10.1017/pan.2019.30}
 #'
 #' @examples
-#' ## Not run:
-#' data |> conditional_marginal_means(selected ~ sex + age, group = resp_age, id = ~id)
+#' \dontrun{
+#'   conditional_marginal_means(
+#'     data,
+#'     selected ~ sex + age, 
+#'     group = resp_age, 
+#'     id = ~id
+#'    )
+#' }
 #' @export
 conditional_marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, group = NULL, wts = NULL, design = NULL) {
   conditional_estimates(
@@ -118,7 +124,6 @@ conditional_marginal_means <- function(data, formula = NULL, outcome = NULL, att
   )
 }
 
-#' @importFrom ggplot2 autoplot
 #' @export
 autoplot.marginal_means <- function(object, ...) {
   
@@ -134,7 +139,6 @@ autoplot.marginal_means <- function(object, ...) {
   
 }
 
-#' @importFrom ggplot2 autoplot
 #' @export
 autoplot.conditional_marginal_means <- function(object, ...) {
   
@@ -161,7 +165,7 @@ summary.marginal_means <- function(object, ...) {
   cat("Marginal Means\n")
   cat(strrep("=", 60), "\n\n")
   
-  purrr::walk(attrs, function(attr) {
+  for (attr in attrs) {
     
     cat("Attribute:", attr, "\n")
     cat(strrep("-", 60), "\n")
@@ -179,7 +183,7 @@ summary.marginal_means <- function(object, ...) {
     print(out, row.names = FALSE)
     cat("\n")
     
-  })
+  }
 }
 
 #' @export
@@ -191,7 +195,7 @@ summary.conditional_marginal_means <- function(object, ...) {
   cat("Conditional Marginal Means\n")
   cat(strrep("=", 60), "\n\n")
   
-  purrr::walk(attrs, function(attr) {
+  for (attr in attrs) {
     
     cat("Attribute:", attr, "\n")
     cat(strrep("-", 60), "\n")
@@ -199,7 +203,7 @@ summary.conditional_marginal_means <- function(object, ...) {
     attr_data <- object[as.character(object$attribute) == attr, ]
     levels    <- unique(attr_data$level)
     
-    purrr::walk(levels, function(lvl) {
+    for (lvl in levels) {
       
       cat("Level:", lvl, "\n\n")
       
@@ -216,11 +220,11 @@ summary.conditional_marginal_means <- function(object, ...) {
       print(out, row.names = FALSE)
       cat("\n")
       
-    })
+    }
     
     cat(strrep("-", 60), "\n\n")
     
-  })
+  }
   
 }
 
