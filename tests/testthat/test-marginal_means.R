@@ -3,7 +3,7 @@ data("trust", package = "conjest")
 test_that("marginal_means returns correct class and structure", {
   result <- marginal_means(trust, selected ~ education + sex, id = ~uuid)
   expect_s3_class(result, "marginal_means")
-  expect_named(result, c("attribute", "level", "term", "estimate", "std.error", "lower", "upper"))
+  expect_named(result, c("attribute", "level", "term", "estimate", "std.error", "lower", "upper", "z", "p"))
 })
 
 test_that("marginal_means estimates are bounded between 0 and 1", {
