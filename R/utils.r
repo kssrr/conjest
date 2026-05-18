@@ -95,6 +95,19 @@ format_number <- function(x, thres = 1e-4) {
   )
 }
 
+#' Marginal means should really be tested for whether they are different from
+#' 0.5. Using this internally to adjust Z to some H_0; in this case: H_0 is 
+#' MM = 0.5.
+#' 
+#' @noRd
+z_adj <- function(est, se, h_0) {
+  
+  z <- (est - h_0) / se
+  p <- 2L * stats::pnorm(-abs(z))
+  
+  list(p = p, z = z)
+}
+
 # `cjlm` is basically the backend that fits the actual model and that `amce` & 
 # `marginal_means` call into. It just wraps `survey::svyglm` which is used here
 # to estimate a linear model adjusting for design features.

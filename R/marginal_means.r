@@ -79,9 +79,14 @@ marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NU
   results$lower <- results$estimate - results$std.error
   results$upper <- results$estimate + results$std.error
   
+  # correct z-test for H_0: MM = 0.5
+  adj_stats <- z_adj(results$estimate, results$std.error, h_0 = .5)
+  results$z <- adj_stats$z
+  results$p <- adj_stats$p
+  
   results <- tibble::tibble(results[, c(
-    "attribute", "level", "term", "estimate", 
-    "std.error", "lower", "upper"
+   "attribute", "level", "term", "estimate",
+   "std.error", "lower", "upper", "z", "p"
   )])
   
   class(results) <- c("marginal_means", class(results))
@@ -220,6 +225,7 @@ summary.marginal_means <- function(object, ...) {
       `Estimate`   = formatC(subset$estimate,  format = "f", digits = 4),
       `Std. Error` = formatC(subset$std.error, format = "f", digits = 4),
       ` `          = ifelse(subset$estimate < .5, "-", "+"),
+      ` `          = make_stars(subset$p),
       check.names  = FALSE
     )
     
@@ -227,6 +233,8 @@ summary.marginal_means <- function(object, ...) {
     cat("\n")
     
   }
+  
+  cat("\nSignif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n")
 }
 
 #' @export
@@ -257,6 +265,7 @@ summary.conditional_marginal_means <- function(object, ...) {
         `Estimate`     = formatC(subset$estimate,  format = "f", digits = 4),
         `Std. Error`   = formatC(subset$std.error, format = "f", digits = 4),
         ` `            = ifelse(subset$estimate >= 0.5, "+", "-"),
+        ` `            = make_stars(subset$p),
         check.names    = FALSE
       )
       
@@ -269,6 +278,7 @@ summary.conditional_marginal_means <- function(object, ...) {
     
   }
   
+  cat("\nSignif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n")
 }
 
 #' @export
