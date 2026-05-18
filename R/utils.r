@@ -149,13 +149,13 @@ z_adj <- function(est, se, h_0) {
 }
 
 # `cjlm` is basically the backend that fits the actual model and that `amce` & 
-# `marginal_means` call into. It just wraps `survey::svyglm` which is used here
+# `mm` call into. It just wraps `survey::svyglm` which is used here
 # to estimate a linear model adjusting for design features.
 #
 #' Fit a Custom Linear Model for Conjoint Data
 #'
 #' Fit arbitrary linear models to conjoint data. Unlike \code{\link{amce}}
-#' and \code{\link{marginal_means}}, which handle formula parsing, baseline
+#' and \code{\link{mm}}, which handle formula parsing, baseline
 #' reconstruction, and result formatting automatically, \code{cjlm} is intended
 #' for custom model specifications that do not fit the other functions in this package, 
 #' such as models with interactions, continuous predictors, or
@@ -178,8 +178,8 @@ z_adj <- function(est, se, h_0) {
 #'   attribute of the result and can be retrieved via \code{attr(result, "model")}
 #'   if needed.
 #'
-#' @seealso \code{\link{amce}}, \code{\link{marginal_means}},
-#'   \code{\link{conditional_amce}}, \code{\link{conditional_marginal_means}}
+#' @seealso \code{\link{amce}}, \code{\link{mm}},
+#'   \code{\link{conditional_amce}}, \code{\link{conditional_mm}}
 #'
 #' @examples
 #' library(conjest)

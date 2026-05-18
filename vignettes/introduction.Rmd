@@ -145,7 +145,7 @@ amce(
 For marginal means, the syntax is basically the same:
 
 ```{r}
-mm_res <- marginal_means(
+mm_res <- mm(
   trust,
   selected ~ group + age + class + sex + education, 
   id = ~uuid
@@ -155,13 +155,13 @@ summary(mm_res)
 autoplot(mm_res)
 ```
 
-Both `amce()` and `marginal_means()` also provide a conditional version to estimate component interactions or subgroup differences.
+Both `amce()` and `mm()` also provide a conditional version to estimate component interactions or subgroup differences.
 
 For example, how does trust in male or female profiles differ, depending on whether the respondent is male or female? We can assess this using marginal means:
 
 ```{r}
 trust |> 
-  conditional_marginal_means(
+  conditional_mm(
     selected ~ sex,
     group = resp_sex,
     id = ~uuid
@@ -196,6 +196,6 @@ cjlm(trust, selected ~ group + sex, id = ~uuid)
 cjlm(trust, selected ~ 0 + sex, id = ~uuid)
 ```
 
-But generally, using `amce()` or `marginal_means()` is preferable due to their convenient summary & visualization methods.
+But generally, using `amce()` or `mm()` is preferable due to their convenient summary & visualization methods.
 
 # References

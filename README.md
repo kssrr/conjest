@@ -10,8 +10,8 @@ Provides tools for estimating and visualizing common estimands from conjoint sur
 This package implements the methods described in [Hainmueller, Hopkins, and Yamamoto (2014)](https://doi.org/10.1093/pan/mpt024) and [Leeper, Hobolt, and Tilley (2020)](https://doi.org/10.1017/pan.2019.30), allowing you to estimate & visualize:
 
 * Average Marginal Component Effects (AMCEs), via `amce()`.
-* Marginal Means, via `marginal_means()`.
-* Conditional versions of both, via `conditional_amce()` and `conditional_marginal_means()`.
+* Marginal Means, via `mm()`.
+* Conditional versions of both, via `conditional_amce()` and `conditional_mm()`.
 * Arbitrary models with design-specific adjustments, via `cjlm()`.
 
 Custom S3 methods for summarizing and visualizing results are included for `summary()` and `ggplot2::autoplot()`.
@@ -56,13 +56,13 @@ summary(amce_res)
 #> Signif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
 
-Results also work with `ggplot2::autoplot()`, both for `marginal_means()`, as well as for `amce()`:
+Results also work with `ggplot2::autoplot()`, both for `mm()`, as well as for `amce()`:
 
 ```r
 library(ggplot2)
 
  trust |> 
-  marginal_means(selected ~ sex + age + class, id = ~uuid) |> 
+  mm(selected ~ sex + age + class, id = ~uuid) |> 
   autoplot()
 ```
 <div align="center">

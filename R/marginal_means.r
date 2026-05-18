@@ -25,13 +25,13 @@
 #'
 #' @return A data frame of class `marginal_means`
 #'
-#' @seealso \code{\link{amce}}, \code{\link{conditional_marginal_means}}
+#' @seealso \code{\link{amce}}, \code{\link{conditional_mm}}
 #'
 #' @examples
 #' library(conjest)
 #' data("trust")
 #' 
-#' res <- marginal_means(trust, selected ~ group + sex + age, id = ~uuid)
+#' res <- mm(trust, selected ~ group + sex + age, id = ~uuid)
 #' 
 #' # Custom methods for inspecting & visualizing results:
 #' summary(res)
@@ -43,14 +43,14 @@
 #' 
 #' cj_design <- svydesign(id = ~uuid, weights = ~weight, data = trust)
 #' 
-#' marginal_means(
+#' mm(
 #'   trust, 
 #'   selected ~ group + sex + age, 
 #'   design = cj_design
 #' )
 #' 
 #' @export
-marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, wts = NULL, design = NULL) {
+mm <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, wts = NULL, design = NULL) {
   
   if (!is.null(formula)) {
     outcome    <- deparse(rlang::f_lhs(formula))
@@ -97,7 +97,7 @@ marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NU
 
 #' Estimate Conditional Marginal Means for a Conjoint Experiment
 #' 
-#' Conditional version of \code{\link{marginal_means}}. Computes marginal means separately for each 
+#' Conditional version of \code{\link{mm}}. Computes marginal means separately for each 
 #' level of a respondent-level grouping variable, allowing comparisons of conjoint preferences across
 #' subgroups. This approach is preferred over conditional AMCEs for subgroup analysis, as conditional
 #' marginal means do not require a baseline, and are thus not sensitive to the choice of a baseline
@@ -118,7 +118,7 @@ marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NU
 #'
 #' @return A data frame of class `marginal_means`
 #'
-#' @seealso \code{\link{marginal_means}}, \code{\link{conditional_amce}}
+#' @seealso \code{\link{mm}}, \code{\link{conditional_amce}}
 #' 
 #' @references Leeper, T. J., Hobolt, S. B., and Tilley, J. (2020). Measuring
 #'   Subgroup Preferences in Conjoint Experiments. \emph{Political Analysis},
@@ -132,7 +132,7 @@ marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NU
 #' # respondent characteristics, e.g. 
 #' # trust in men vs. women, by sex of
 #' # the respondent:
-#' res <- conditional_marginal_means(
+#' res <- conditional_mm(
 #'   trust,
 #'   selected ~ sex,
 #'   group = resp_sex,
@@ -152,7 +152,7 @@ marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NU
 #' # outgroup profiles vary depending on the
 #' # sex of the profile?
 #' 
-#' conditional_marginal_means(
+#' conditional_mm(
 #'   trust,
 #'   selected ~ group,
 #'   group = sex,
@@ -160,14 +160,14 @@ marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NU
 #' )
 #' 
 #' @export
-conditional_marginal_means <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, group = NULL, wts = NULL, design = NULL) {
+conditional_mm <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, group = NULL, wts = NULL, design = NULL) {
   conditional_estimates(
     data, formula, outcome, attributes,
     groupvar   = rlang::as_name(rlang::ensym(group)),
     id         = id,
     wts        = wts,
     design     = design,
-    .estimator = marginal_means,
+    .estimator = mm,
     .class     = "conditional_marginal_means"
   )
 }

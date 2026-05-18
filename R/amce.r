@@ -34,7 +34,7 @@
 #'   Preference Experiments. \emph{Political Analysis}, 22(1), 1--30.
 #'   \doi{10.1093/pan/mpt024}
 #' 
-#' @seealso \code{\link{conditional_amce}}, \code{\link{marginal_means}}
+#' @seealso \code{\link{conditional_amce}}, \code{\link{mm}}
 #'
 #' @examples
 #' library(conjest)
@@ -131,7 +131,7 @@ amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = N
 #' thus do not provide direct insight about patterns of preferences 
 #' between groups (Leeper, Hobolt & Tilley, 2020). For comparing
 #' absolute levels of favorability across subgroups, use
-#' \code{\link{conditional_marginal_means}} instead.
+#' \code{\link{conditional_mm}} instead.
 #' 
 #' @param data A data frame containing the conjoint data.
 #' @param formula A formula of the form \code{outcome ~ attr1 + attr2 + ...}.
@@ -157,7 +157,7 @@ amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = N
 #'   Subgroup Preferences in Conjoint Experiments. \emph{Political Analysis},
 #'   28(2), 207--221. \doi{10.1017/pan.2019.30}
 #'
-#' @seealso \code{\link{amce}}, \code{\link{conditional_marginal_means}}
+#' @seealso \code{\link{amce}}, \code{\link{conditional_mm}}
 #'
 #' @examples
 #' library(conjest)

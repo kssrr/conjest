@@ -17,12 +17,12 @@ test_that("conditional_amce has one set of results per group level", {
 })
 
 test_that("conditional_marginal_means returns correct class", {
-  result <- conditional_marginal_means(trust, selected ~ education, id = ~uuid, group = resp_sex)
+  result <- conditional_mm(trust, selected ~ education, id = ~uuid, group = resp_sex)
   expect_s3_class(result, "conditional_marginal_means")
 })
 
 test_that("conditional estimates differ across groups", {
-  result <- conditional_marginal_means(trust, selected ~ group, id = ~uuid, group = sex)
+  result <- conditional_mm(trust, selected ~ group, id = ~uuid, group = sex)
   male   <- result[result$sex == "Male",   "estimate"]
   female <- result[result$sex == "Female", "estimate"]
   expect_false(isTRUE(all.equal(male, female)))
