@@ -1,4 +1,4 @@
-#' @importFrom stats terms reformulate gaussian
+#' @importFrom stats terms reformulate gaussian complete.cases pnorm
 #' @importFrom ggplot2 autoplot
 NULL
 

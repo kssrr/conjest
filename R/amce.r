@@ -66,10 +66,10 @@
 amce <- function(data, formula = NULL, outcome = NULL, attributes = NULL, id = NULL, wts = NULL, design = NULL) {
   
   if (!is.null(formula)) {
-    outcome <- deparse(rlang::f_lhs(formula))
+    outcome    <- deparse(rlang::f_lhs(formula))
     attributes <- labels(terms(formula))
   }
-
+  
   assert_fct(data, attributes)
   
   results <- lapply(attributes, function(attr) {
