@@ -52,7 +52,7 @@ AMCEs are sensitive to the choice of the reference category), and
 thus do not provide direct insight about patterns of preferences
 between groups (Leeper, Hobolt & Tilley, 2020). For comparing
 absolute levels of favorability across subgroups, use
-\code{\link{conditional_marginal_means}} instead.
+\code{\link{conditional_mm}} instead.
 }
 \examples{
 library(conjest)
@@ -83,5 +83,5 @@ Subgroup Preferences in Conjoint Experiments. \emph{Political Analysis},
 28(2), 207--221. \doi{10.1017/pan.2019.30}
 }
 \seealso{
-\code{\link{amce}}, \code{\link{conditional_marginal_means}}
+\code{\link{amce}}, \code{\link{conditional_mm}}
 }

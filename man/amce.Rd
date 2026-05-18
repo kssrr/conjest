@@ -85,5 +85,5 @@ Preference Experiments. \emph{Political Analysis}, 22(1), 1--30.
 \doi{10.1093/pan/mpt024}
 }
 \seealso{
-\code{\link{conditional_amce}}, \code{\link{marginal_means}}
+\code{\link{conditional_amce}}, \code{\link{mm}}
 }

@@ -51,11 +51,30 @@ validate_design <- function(data, design, id, wts) {
   
 }
 
+# Check if all variables from the formula actually exist:
+#
+#' @noRd
+assert_exist <- function(data, variables) {
+  
+  dne <- variables[!variables %in% colnames(data)]
+  
+  if (length(dne) > 0) {
+    cli::cli_abort(c(
+      "Some variables do not exist in {.var data}:",
+      "x" = "{.var {dne}}"
+    ), call = rlang::caller_env())
+  }
+  
+}
+
+
 # Check if all provided attribute are factors, throw if not (used for AMCE
 # and Marginal Means to ensure coherent behavior).
 #
 #' @noRd
 assert_fct <- function(data, attributes) {
+  
+  assert_exist(data, attributes)
   
   non_factors <- attributes[!sapply(attributes, function(x) is.factor(data[[x]]))]
   
@@ -66,6 +85,27 @@ assert_fct <- function(data, attributes) {
     ), call = rlang::caller_env())
   }
   
+}
+
+# Drop rows with missing values; otherwise they might yield non-descript errors
+# later in svyglm ("no missing values in weights allowed")
+#
+#' @noRd
+check_data <- function(data, variables) {
+  
+  assert_exist(data, variables)
+  
+  n_before <- nrow(data)
+  new_data <- data[complete.cases(data[, variables]), ]
+  n_dropped <- n_before - nrow(new_data)
+  
+  if (n_dropped > 0) {
+    cli::cli_warn(
+      "Dropping {n_dropped} row{?s} with missing values in variable{?s} {.var {variables}}."
+    )
+  }
+  
+  new_data
 }
 
 # Get stars for significance levels for printouts. Can be called like
@@ -95,14 +135,27 @@ format_number <- function(x, thres = 1e-4) {
   )
 }
 
+#' Marginal means should really be tested for whether they are different from
+#' 0.5. Using this internally to adjust Z to some H_0; in this case: H_0 is 
+#' MM = 0.5.
+#' 
+#' @noRd
+z_adj <- function(est, se, h_0) {
+  
+  z <- (est - h_0) / se
+  p <- 2L * pnorm(-abs(z))
+  
+  list(p = p, z = z)
+}
+
 # `cjlm` is basically the backend that fits the actual model and that `amce` & 
-# `marginal_means` call into. It just wraps `survey::svyglm` which is used here
+# `mm` call into. It just wraps `survey::svyglm` which is used here
 # to estimate a linear model adjusting for design features.
 #
 #' Fit a Custom Linear Model for Conjoint Data
 #'
 #' Fit arbitrary linear models to conjoint data. Unlike \code{\link{amce}}
-#' and \code{\link{marginal_means}}, which handle formula parsing, baseline
+#' and \code{\link{mm}}, which handle formula parsing, baseline
 #' reconstruction, and result formatting automatically, \code{cjlm} is intended
 #' for custom model specifications that do not fit the other functions in this package, 
 #' such as models with interactions, continuous predictors, or
@@ -125,8 +178,8 @@ format_number <- function(x, thres = 1e-4) {
 #'   attribute of the result and can be retrieved via \code{attr(result, "model")}
 #'   if needed.
 #'
-#' @seealso \code{\link{amce}}, \code{\link{marginal_means}},
-#'   \code{\link{conditional_amce}}, \code{\link{conditional_marginal_means}}
+#' @seealso \code{\link{amce}}, \code{\link{mm}},
+#'   \code{\link{conditional_amce}}, \code{\link{conditional_mm}}
 #'
 #' @examples
 #' library(conjest)
@@ -151,13 +204,14 @@ format_number <- function(x, thres = 1e-4) {
 #' @export
 cjlm <- function(data, formula = NULL, id = NULL, wts = NULL, design = NULL) {
   
+  data   <- check_data(data, all.vars(formula))
   design <- validate_design(data, design, id, wts)
 
   model <- survey::svyglm(formula, design, family = gaussian())
-  res <- broom::tidy(model)
+  res   <- broom::tidy(model)
   
-  class(res) <- c("cjlm", class(res))
-  attr(res, "id") <- id
+  class(res)         <- c("cjlm", class(res))
+  attr(res, "id")    <- id
   attr(res, "model") <- model
   
   res

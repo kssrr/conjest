@@ -30,7 +30,7 @@ if needed.
 }
 \description{
 Fit arbitrary linear models to conjoint data. Unlike \code{\link{amce}}
-and \code{\link{marginal_means}}, which handle formula parsing, baseline
+and \code{\link{mm}}, which handle formula parsing, baseline
 reconstruction, and result formatting automatically, \code{cjlm} is intended
 for custom model specifications that do not fit the other functions in this package,
 such as models with interactions, continuous predictors, or
@@ -59,6 +59,6 @@ cjlm(trust, selected ~ 0 + sex, id = ~uuid)
 
 }
 \seealso{
-\code{\link{amce}}, \code{\link{marginal_means}},
-\code{\link{conditional_amce}}, \code{\link{conditional_marginal_means}}
+\code{\link{amce}}, \code{\link{mm}},
+\code{\link{conditional_amce}}, \code{\link{conditional_mm}}
 }
