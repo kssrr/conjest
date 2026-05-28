@@ -20,7 +20,9 @@ Imports:
     broom,
     cli,
     ggplot2,
+    lmtest,
     rlang,
+    sandwich,
     survey,
     tibble
 Suggests: 

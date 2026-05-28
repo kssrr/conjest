@@ -1,4 +1,4 @@
-#' @importFrom stats terms reformulate gaussian complete.cases pnorm
+#' @importFrom stats terms reformulate gaussian complete.cases pnorm anova as.formula lm
 #' @importFrom ggplot2 autoplot
 NULL
 
